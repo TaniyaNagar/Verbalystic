@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--LOGIN-->
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Verbalystic</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .form-input:focus {
+            border-color: #2b9dee;
+            box-shadow: 0 0 0 2px rgba(43, 157, 238, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-white p-4 dark:bg-[#101a22]">
+<div class="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:border-gray-700/50 dark:bg-background-dark dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] sm:p-8">
+<div class="flex flex-col items-center space-y-6">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+<svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M12 10a.5.5 0 00-1 0v1a.5.5 0 001 0v-1z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<h1 class="text-2xl font-bold leading-tight tracking-tight text-[#333333] dark:text-white">Login</h1>
+<form class="w-full space-y-4">
+<div class="flex w-full flex-wrap items-end">
+<label class="flex w-full flex-col">
+<p class="pb-2 text-sm font-medium leading-normal text-[#333333] dark:text-gray-300">Email</p>
+<input class="form-input h-11 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#DDDDDD] bg-white p-3 text-sm font-normal leading-normal text-[#333333] placeholder:text-[#DDDDDD] focus:outline-none dark:border-gray-700/50 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" placeholder="Enter your email" type="email" value=""/>
+</label>
+</div>
+<div class="flex w-full flex-wrap items-end">
+<label class="flex w-full flex-col">
+<p class="pb-2 text-sm font-medium leading-normal text-[#333333] dark:text-gray-300">Password</p>
+<input class="form-input h-11 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#DDDDDD] bg-white p-3 text-sm font-normal leading-normal text-[#333333] placeholder:text-[#DDDDDD] focus:outline-none dark:border-gray-700/50 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" placeholder="Enter your password" type="password" value=""/>
+</label>
+</div>
+<button class="flex w-full items-center justify-center rounded-lg bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark">Login</button>
+<div class="text-center">
+<a class="text-xs font-medium text-primary hover:underline" href="#">Forgot password?</a>
+</div>
+</form>
+<div class="flex w-full items-center gap-4">
+<hr class="w-full border-t border-[#DDDDDD] dark:border-gray-700/50"/>
+</div>
+<p class="text-center text-sm text-[#333333] dark:text-gray-300">
+                    Don’t have an account? <a href="signup.html" class="font-semibold text-primary hover:underline">Sign up</a>
+
+</p>
+</div>
+</div>
+</div>
+</body></html>
