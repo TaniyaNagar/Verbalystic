@@ -1,17 +1,44 @@
 <!DOCTYPE html>
-<!--SignUp HTML-->
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Sign Up</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
-<style>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sign Up</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#359EFF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1923"
+                    },
+                    fontFamily: {
+                        display: "Inter"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .form-input:focus {
             border-color: #87CEEB;
             box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.4);
@@ -19,52 +46,90 @@
         }
     </style>
 </head>
+
+
+
 <body class="font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200">
-<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
-<div class="layout-container flex h-full grow flex-col">
-<main class="flex flex-1 items-center justify-center p-4">
-<div class="flex w-full max-w-md flex-col items-center gap-6 rounded-xl border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800 p-8 shadow-sm">
-<div class="flex items-center justify-center mb-2">
-<svg class="h-12 w-12" fill="none" height="48" stroke="#87CEEB" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 2a3.12 3.12 0 0 1 3 3.9A3.12 3.12 0 0 1 12 10a3.12 3.12 0 0 1-3-4.1A3.12 3.12 0 0 1 12 2z"></path>
-<path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-<line x1="12" x2="12" y1="19" y2="22"></line>
-</svg>
-</div>
-<h1 class="text-2xl font-bold leading-tight tracking-tight text-[#333333] dark:text-white">Sign Up</h1>
-<div class="w-full space-y-5">
-<label class="flex flex-col w-full">
-<p class="text-[#333333] dark:text-gray-300 text-sm font-medium pb-2">Name</p>
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-gray-200 focus:outline-0 focus:ring-0 border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 placeholder:text-[#A9A9A9] p-3 text-base font-normal" placeholder="Enter your name" value=""/>
-</label>
-<label class="flex flex-col w-full">
-<p class="text-[#333333] dark:text-gray-300 text-sm font-medium pb-2">Email</p>
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-gray-200 focus:outline-0 focus:ring-0 border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 placeholder:text-[#A9A9A9] p-3 text-base font-normal" placeholder="Enter your email" type="email" value=""/>
-</label>
-<div class="w-full">
-<label class="flex flex-col w-full">
-<p class="text-[#333333] dark:text-gray-300 text-sm font-medium pb-2">Password</p>
-<div class="relative w-full">
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-gray-200 focus:outline-0 focus:ring-0 border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 placeholder:text-[#A9A9A9] p-3 pr-10 text-base font-normal" placeholder="Enter your password" type="password" value=""/>
-<button class="absolute inset-y-0 right-0 flex items-center pr-3" type="button">
-<span class="material-symbols-outlined text-gray-400 dark:text-gray-500 cursor-pointer text-xl">visibility</span>
-</button>
-</div>
-<label class="flex flex-col w-full">
-<p class="text-[#333333] dark:text-gray-300 text-sm font-medium pb-2" style="padding-top: 19px;">Confirm Password</p>
-<div class="relative w-full">
-<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-gray-200 focus:outline-0 focus:ring-0 border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 placeholder:text-[#A9A9A9] p-3 pr-10 text-base font-normal" placeholder="Confirm your password" type="password" value=""/>
-<button class="absolute inset-y-0 right-0 flex items-center pr-3" type="button">
-<span class="material-symbols-outlined text-gray-400 dark:text-gray-500 cursor-pointer text-xl">visibility</span>
-</button>
-</div>
-</label>
-</div>
-<button class="fflex w-full items-center justify-center rounded-lg bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark">Sign Up</button>
-<p class="text-sm text-[#A9A9A9] dark:text-gray-400">Already have an account?<a href="login.html" class="font-semibold text-primary hover:underline">Login</a>
-</p>
-</div>
-</main>
-</div>
-</div>
-</body></html>
+    <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+        <div class="layout-container flex h-full grow flex-col">
+            <main class="flex flex-1 items-center justify-center p-4">
+
+                <!-- FORM ADDED -->
+                <form id="signupForm" class="flex w-full max-w-md flex-col items-center gap-6 rounded-xl border border-gray-200/80 dark:border-gray-700/60 bg-white dark:bg-gray-800 p-8 shadow-sm">
+
+                    <div class="flex items-center justify-center mb-2">
+                        <svg class="h-12 w-12" fill="none" stroke="#87CEEB" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 2a3.12 3.12 0 0 1 3 3.9A3.12 3.12 0 0 1 12 10a3.12 3.12 0 0 1-3-4.1A3.12 3.12 0 0 1 12 2z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" x2="12" y1="19" y2="22" />
+                        </svg>
+                    </div>
+
+                    <h1 class="text-2xl font-bold tracking-tight text-[#333333] dark:text-white">Sign Up</h1>
+
+                    <div class="w-full space-y-5">
+
+                        <!-- NAME -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-sm font-medium pb-2">Name</p>
+                            <input name="name"
+                                class="form-input rounded-lg border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 p-3 text-base placeholder:text-[#A9A9A9]"
+                                placeholder="Enter your name" required />
+                        </label>
+
+                        <!-- EMAIL -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-sm font-medium pb-2">Email</p>
+                            <input name="email" type="email"
+                                class="form-input rounded-lg border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 p-3 text-base placeholder:text-[#A9A9A9]"
+                                placeholder="Enter your email" required />
+                        </label>
+
+                        <!-- PASSWORD -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-sm font-medium pb-2">Password</p>
+                            <div class="relative w-full">
+                                <input name="password" type="password"
+                                    class="form-input rounded-lg border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 p-3 pr-10 text-base placeholder:text-[#A9A9A9]"
+                                    placeholder="Enter your password" required />
+                                <button class="absolute inset-y-0 right-0 flex items-center pr-3" type="button">
+                                    <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-xl">visibility</span>
+                                </button>
+                            </div>
+                        </label>
+
+                        <!-- CONFIRM PASSWORD -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-sm font-medium pb-2 pt-3">Confirm Password</p>
+                            <div class="relative w-full">
+                                <input name="confirmPassword" type="password"
+                                    class="form-input rounded-lg border border-[#cfdde7] dark:border-gray-600 bg-background-light dark:bg-background-dark h-12 p-3 pr-10 text-base placeholder:text-[#A9A9A9]"
+                                    placeholder="Confirm your password" required />
+                                <button class="absolute inset-y-0 right-0 flex items-center pr-3" type="button">
+                                    <span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-xl">visibility</span>
+                                </button>
+                            </div>
+                        </label>
+
+                    </div>
+
+                    <button type="submit"
+                        class="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90">
+                        Sign Up
+                    </button>
+
+                    <p class="text-sm text-[#A9A9A9] dark:text-gray-400">
+                        Already have an account?
+                        <a href="login.html" class="font-semibold text-primary hover:underline">Login</a>
+                    </p>
+
+                </form>
+                <!-- END FORM -->
+
+            </main>
+        </div>
+    </div>
+</body>
+<script src="signup.js"></script>
+</html>
