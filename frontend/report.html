@@ -1,302 +1,227 @@
 <!DOCTYPE html>
-<!--Report HTML-->
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Verbalystic-Report</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923", "card-light": "#FFFFFF", "card-dark": "#1A2633", "text-header-light": "#1F2937", "text-header-dark": "#F0F4F8", "text-body-light": "#6B7280", "text-body-dark": "#94A3B8", "border-light": "#E4E7EB", "border-dark": "#334155", "accent-teal": "#14B8A6", "accent-orange": "#F97316", "accent-red": "#EF4444", "accent-yellow": "#FBBF24"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, boxShadow: {soft: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)"}}}};</script>
-<style>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verbalystic – Report</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-            font-size: 20px;
         }
     </style>
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark">
-<div class="flex min-h-screen w-full">
-<aside class="relative hidden h-screen w-64 shrink-0 flex-col bg-card-light dark:bg-card-dark p-2 shadow-soft lg:flex">
-<div class="flex h-12 items-center justify-between px-2">
-<div class="flex items-center gap-2">
-<h2 class="text-text-header-light dark:text-text-header-dark text-lg font-bold">Verbalystic</h2>
-</div>
-</div>
-<nav class="mt-4 flex flex-1 flex-col justify-between">
-<div class="space-y-4">
-<div class="space-y-1">
-<a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-header-light dark:text-text-header-dark hover:bg-background-light dark:hover:bg-border-dark" href="main.html">
-<span class="material-symbols-outlined">add_circle</span> New Session
-                    </a>
-<a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-header-light dark:text-text-header-dark hover:bg-background-light dark:hover:bg-border-dark" href="#">
-<span class="material-symbols-outlined">history</span> History
-                    </a>
-</div>
-<a class="flex items-center gap-3 rounded-md bg-primary/10 px-3 py-2 text-sm font-medium text-primary dark:bg-primary/20 dark:text-primary-300" href="report.html">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span> Report
-                    </a>
-<a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-header-light dark:text-text-header-dark hover:bg-background-light dark:hover:bg-border-dark" href="profile.html">
-<span class="material-symbols-outlined">person</span> Profile
-                    </a>
-<a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-header-light dark:text-text-header-dark hover:bg-background-light dark:hover:bg-border-dark" href="setting.html">
-<span class="material-symbols-outlined">settings</span> Settings
-                    </a>
-</div>
-<div class="border-t border-border-light dark:border-border-dark pt-2">
-<div class="flex items-center justify-between rounded-md p-2 hover:bg-background-light dark:hover:bg-border-dark">
-<div class="flex items-center gap-2">
-<div class="h-8 w-8 rounded-full bg-cover bg-center" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIgY8_Vk80Lx5xaJn652UYa-r40E81dHX7Z4IDFqRk8qFEmmfUjIjUc6S48FSotQeVzOpG9mX89lU7Fv2UG93g6FLmxC-V_6wTiR8sPACPkLeb5UlVALCsOePTtg_JpkC8GrMYZJo1XfFCGmhVBp8Htp3IQlHr5po1-nmN3LRhqPJZuW7lXwHUjqWgYeezsQTd5bM9D0JYsD4n67lv4MIpG-nrsU9DLxAvHa9hhPuuFmNfYMtYoJrmsM1Pxvcd3BW9cE7Sykc9gBfq");'></div>
-<span class="text-sm font-medium text-text-header-light dark:text-text-header-dark">Shreyansh</span>
-</div>
-<button class="text-text-body-light dark:text-text-body-dark">
-<span class="material-symbols-outlined">logout</span>
-</button>
-</div>
-</div>
-</nav>
-</aside>
-<div class="flex w-full flex-col">
-<header class="sticky top-0 z-10 w-full border-b border-border-light dark:border-border-dark bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm lg:hidden">
-<div class="mx-auto flex max-w-7xl items-center justify-between p-4">
-<div class="flex items-center gap-3">
-<button class="text-text-body-light dark:text-text-body-dark">
-<span class="material-symbols-outlined">menu</span>
-</button>
-<h2 class="text-text-header-light dark:text-text-header-dark text-xl font-bold">Verbalystic</h2>
-</div>
-<div class="flex items-center gap-4">
-<button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-text-body-light dark:text-text-body-dark hover:bg-primary/10 dark:hover:bg-primary/20">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIgY8_Vk80Lx5xaJn652UYa-r40E81dHX7Z4IDFqRk8qFEmmfUjIjUc6S48FSotQeVzOpG9mX89lU7Fv2UG93g6FLmxC-V_6wTiR8sPACPkLeb5UlVALCsOePTtg_JpkC8GrMYZJo1XfFCGmhVBp8Htp3IQlHr5po1-nmN3LRhqPJZuW7lXwHUjqWgYeezsQTd5bM9D0JYsD4n67lv4MIpG-nrsU9DLxAvHa9hhPuuFmNfYMtYoJrmsM1Pxvcd3BW9cE7Sykc9gBfq");'></div>
-</div>
-</div>
-</header>
-<main class="w-full grow">
-<div class="mx-auto max-w-7xl px-4 py-8">
-<div class="mb-8">
-<h1 class="text-text-header-light dark:text-text-header-dark text-4xl font-black tracking-tighter">Your Performance Report</h1>
-<p class="text-text-body-light dark:text-text-body-dark mt-2 text-lg">Here's a detailed breakdown of your latest session.</p>
-</div>
-<div class="grid grid-cols-1 gap-6">
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft">
-<p class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Overall Performance Trends</p>
-<p class="text-text-body-light dark:text-text-body-dark text-sm">Comparison of key metrics over the last 7 sessions</p>
-<div class="mt-6 h-72">
-<svg fill="none" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 800 300" width="100%" xmlns="http://www.w3.org/2000/svg">
-<line stroke="#E4E7EB" stroke-width="2" x1="50" x2="750" y1="250" y2="250"></line>
-<path d="M 50 150 C 150 50, 250 200, 350 100 C 450 0, 550 220, 650 120 C 700 70, 750 150, 750 150" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
-<path d="M 50 180 C 150 120, 250 250, 350 160 C 450 70, 550 280, 650 190 C 700 140, 750 180, 750 180" stroke="#14B8A6" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
-<path d="M 50 220 C 150 190, 250 150, 350 200 C 450 250, 550 120, 650 160 C 700 200, 750 220, 750 220" stroke="#F97316" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
-<g class="text-xs text-text-body-light dark:text-text-body-dark fill-current">
-<text text-anchor="middle" x="50" y="270">S1</text>
-<text text-anchor="middle" x="166" y="270">S2</text>
-<text text-anchor="middle" x="282" y="270">S3</text>
-<text text-anchor="middle" x="398" y="270">S4</text>
-<text text-anchor="middle" x="514" y="270">S5</text>
-<text text-anchor="middle" x="630" y="270">S6</text>
-<text text-anchor="middle" x="746" y="270">S7</text>
-</g>
-</svg>
-</div>
-<div class="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2">
-<div class="flex items-center gap-2">
-<div class="h-3 w-3 rounded-full bg-primary"></div><span class="text-sm text-text-body-light dark:text-text-body-dark">Grammar</span>
-</div>
-<div class="flex items-center gap-2">
-<div class="h-3 w-3 rounded-full bg-accent-teal"></div><span class="text-sm text-text-body-light dark:text-text-body-dark">Flow</span>
-</div>
-<div class="flex items-center gap-2">
-<div class="h-3 w-3 rounded-full bg-accent-orange"></div><span class="text-sm text-text-body-light dark:text-text-body-dark">Fillers</span>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft lg:col-span-2">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Grammar Errors</h3>
-<div class="mt-4 flow-root">
-<div class="-my-2 overflow-x-auto">
-<div class="inline-block min-w-full py-2 align-middle">
-<table class="min-w-full divide-y divide-border-light dark:divide-border-dark">
-<thead>
-<tr>
-<th class="py-3.5 pl-0 pr-3 text-left text-sm font-semibold text-text-header-light dark:text-text-header-dark" scope="col">Incorrect Phrase</th>
-<th class="px-3 py-3.5 text-left text-sm font-semibold text-text-header-light dark:text-text-header-dark" scope="col">Suggested Correction</th>
-<th class="relative py-3.5 pl-3 pr-0 text-left text-sm font-semibold text-text-header-light dark:text-text-header-dark" scope="col">Count</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-border-light dark:divide-border-dark">
-<tr>
-<td class="whitespace-nowrap py-4 pl-0 pr-3 text-sm text-text-body-light dark:text-text-body-dark flex items-center gap-2">
-<div class="size-2 rounded-full bg-accent-red"></div>The data are clear.
-                                                    </td>
-<td class="whitespace-nowrap px-3 py-4 text-sm text-text-body-light dark:text-text-body-dark">The data is clear.</td>
-<td class="whitespace-nowrap py-4 pl-3 pr-0 text-sm font-medium text-text-body-light dark:text-text-body-dark">3</td>
-</tr>
-<tr>
-<td class="whitespace-nowrap py-4 pl-0 pr-3 text-sm text-text-body-light dark:text-text-body-dark flex items-center gap-2">
-<div class="size-2 rounded-full bg-accent-red"></div>Me and him went...
-                                                    </td>
-<td class="whitespace-nowrap px-3 py-4 text-sm text-text-body-light dark:text-text-body-dark">He and I went...</td>
-<td class="whitespace-nowrap py-4 pl-3 pr-0 text-sm font-medium text-text-body-light dark:text-text-body-dark">2</td>
-</tr>
-<tr>
-<td class="whitespace-nowrap py-4 pl-0 pr-3 text-sm text-text-body-light dark:text-text-body-dark flex items-center gap-2">
-<div class="size-2 rounded-full bg-accent-yellow"></div>Less people were there.
-                                                    </td>
-<td class="whitespace-nowrap px-3 py-4 text-sm text-text-body-light dark:text-text-body-dark">Fewer people were there.</td>
-<td class="whitespace-nowrap py-4 pl-3 pr-0 text-sm font-medium text-text-body-light dark:text-text-body-dark">1</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft flex flex-col items-center justify-center text-center">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Rank &amp; Streak</h3>
-<div class="relative mt-4 flex items-center justify-center">
-<svg class="h-32 w-32 -rotate-90 transform" viewBox="0 0 120 120">
-<circle class="stroke-primary/20" cx="60" cy="60" fill="none" r="54" stroke-width="12"></circle>
-<circle class="stroke-primary" cx="60" cy="60" fill="none" r="54" stroke-dasharray="290" stroke-dashoffset="72.5" stroke-linecap="round" stroke-width="12"></circle>
-</svg>
-<div class="absolute flex flex-col">
-<span class="text-3xl font-bold text-text-header-light dark:text-text-header-dark">#12</span>
-<span class="text-sm text-text-body-light dark:text-text-body-dark">Top 15%</span>
-</div>
-</div>
-<div class="mt-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-accent-orange text-2xl">local_fire_department</span>
-<span class="text-xl font-bold text-text-header-light dark:text-text-header-dark">14 Day Streak</span>
-</div>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Filler Words</h3>
-<div class="mt-4 space-y-4">
-<div>
-<div class="flex justify-between text-sm">
-<p class="font-medium text-text-body-light dark:text-text-body-dark">'Um'</p>
-<p class="text-text-body-light dark:text-text-body-dark">12 times</p>
-</div>
-<div class="mt-1 h-2 w-full rounded-full bg-primary/20 dark:bg-primary/30">
-<div class="h-2 rounded-full bg-accent-red" style="width: 85%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-sm">
-<p class="font-medium text-text-body-light dark:text-text-body-dark">'Like'</p>
-<p class="text-text-body-light dark:text-text-body-dark">7 times</p>
-</div>
-<div class="mt-1 h-2 w-full rounded-full bg-primary/20 dark:bg-primary/30">
-<div class="h-2 rounded-full bg-accent-yellow" style="width: 50%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-sm">
-<p class="font-medium text-text-body-light dark:text-text-body-dark">'You know'</p>
-<p class="text-text-body-light dark:text-text-body-dark">3 times</p>
-</div>
-<div class="mt-1 h-2 w-full rounded-full bg-primary/20 dark:bg-primary/30">
-<div class="h-2 rounded-full bg-primary" style="width: 20%"></div>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Time Analysis</h3>
-<div class="mt-4 grid grid-cols-2 gap-4">
-<div>
-<p class="text-sm text-text-body-light dark:text-text-body-dark">Speaking Time</p>
-<p class="text-2xl font-bold text-text-header-light dark:text-text-header-dark">10m 32s</p>
-</div>
-<div>
-<p class="text-sm text-text-body-light dark:text-text-body-dark">Pausing Time</p>
-<p class="text-2xl font-bold text-text-header-light dark:text-text-header-dark">1m 15s</p>
-</div>
-<div class="col-span-2">
-<p class="text-sm text-text-body-light dark:text-text-body-dark">Talk Ratio</p>
-<p class="text-2xl font-bold text-text-header-light dark:text-text-header-dark">89%</p>
-<div class="mt-2 h-3 w-full rounded-full bg-primary/20 dark:bg-primary/30">
-<div class="h-3 rounded-full bg-primary" style="width: 89%"></div>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Decibel Meter</h3>
-<p class="text-sm text-text-body-light dark:text-text-body-dark">Volume Variation</p>
-<div class="mt-4 flex h-24 flex-col items-center justify-center">
-<div class="relative w-full">
-<div class="h-1 rounded-full bg-gradient-to-r from-primary to-accent-red"></div>
-<div class="absolute -top-3 h-4 w-4 rounded-full border-2 border-white bg-primary shadow" style="left: 65%;"></div>
-</div>
-<div class="mt-3 flex w-full justify-between text-xs text-text-body-light dark:text-text-body-dark">
-<span>Quiet</span>
-<span>Conversational</span>
-<span>Loud</span>
-</div>
-<div class="mt-4 text-center">
-<p class="text-2xl font-bold text-text-header-light dark:text-text-header-dark">65 dB</p>
-<p class="text-sm text-text-body-light dark:text-text-body-dark">Avg. Volume</p>
-</div>
-</div>
-</div>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Speech Transcript Analysis</h3>
-<div class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-<div>
-<h4 class="font-semibold text-text-body-light dark:text-text-body-dark">Your Speech Transcript</h4>
-<div class="mt-2 h-64 overflow-y-auto rounded-lg border border-border-light dark:border-border-dark p-4 text-sm text-text-body-light dark:text-text-body-dark space-y-2">
-<p>So, <mark class="bg-accent-orange/20 rounded">um</mark>, the first point I want to make is that the data <mark class="bg-accent-red/20 rounded">are</mark> clear. We saw, <mark class="bg-accent-orange/20 rounded">like</mark>, a huge increase in user engagement.</p>
-<p>
-<mark class="bg-accent-red/20 rounded">Me and him</mark> worked on this project, and we think that <mark class="bg-accent-red/20 rounded">less</mark> people will churn if we implement these changes, <mark class="bg-accent-orange/20 rounded">you know</mark>?
-                                    </p>
-<p>It's, <mark class="bg-accent-orange/20 rounded">uh</mark>, really important to consider all the factors.</p>
-</div>
-</div>
-<div>
-<h4 class="font-semibold text-primary">AI-Improved Version</h4>
-<div class="mt-2 h-64 overflow-y-auto rounded-lg border border-primary/50 p-4 text-sm text-text-body-light dark:text-text-body-dark space-y-2">
-<p>The first point I want to make is that <mark class="bg-primary/20 rounded">the data is clear</mark>. We saw a significant increase in user engagement.</p>
-<p>
-<mark class="bg-primary/20 rounded">He and I</mark> worked on this project, and we believe that <mark class="bg-primary/20 rounded">fewer customers</mark> will churn if we implement these changes.
-                                    </p>
-<p>It's crucial to consider all the factors.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-<div class="col-span-1 sm:col-span-2 lg:col-span-3">
-<h3 class="text-text-header-light dark:text-text-header-dark text-lg font-semibold">Tips &amp; Exercises</h3>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft transition-all hover:border-primary/50 hover:shadow-lg">
-<span class="material-symbols-outlined text-primary text-3xl">record_voice_over</span>
-<h4 class="mt-2 font-semibold text-text-header-light dark:text-text-header-dark">Pace Variation</h4>
-<p class="mt-1 text-sm text-text-body-light dark:text-text-body-dark">Try reading a paragraph, alternating between a slow and fast pace for each sentence.</p>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft transition-all hover:border-primary/50 hover:shadow-lg">
-<span class="material-symbols-outlined text-primary text-3xl">pause</span>
-<h4 class="mt-2 font-semibold text-text-header-light dark:text-text-header-dark">The Power of Pauses</h4>
-<p class="mt-1 text-sm text-text-body-light dark:text-text-body-dark">Instead of 'um', take a silent 2-second pause. This adds emphasis and gives you time to think.</p>
-</div>
-<div class="rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-6 shadow-soft transition-all hover:border-primary/50 hover:shadow-lg">
-<span class="material-symbols-outlined text-primary text-3xl">rule</span>
-<h4 class="mt-2 font-semibold text-text-header-light dark:text-text-header-dark">Grammar Check</h4>
-<p class="mt-1 text-sm text-text-body-light dark:text-text-body-dark">Focus on subject-verb agreement. Practice with sentences like "He and I go..." vs "Me and him..."</p>
-</div>
-</div>
-</div>
-<div class="mt-12 flex justify-end">
-<button class="flex items-center gap-2 rounded-full border-2 border-primary bg-transparent px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10">
-<span class="material-symbols-outlined">share</span>
+
+<body class="bg-background-light dark:bg-background-dark font-display">
+
+    <div class="flex min-h-screen w-full">
+
+        <!-- SIDEBAR -->
+        <aside class="hidden lg:flex h-screen w-64 shrink-0 flex-col bg-white dark:bg-gray-800 p-4 shadow">
+
+            <!-- LOGO -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Verbalystic</h2>
+            </div>
+
+            <!-- NAVIGATION -->
+            <nav class="mt-6 flex flex-col gap-2 text-sm font-medium">
+
+                <a href="main.html"
+                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    New Session
+                </a>
+
+                <a href="history.html"
+                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <span class="material-symbols-outlined">history</span>
+                    History
+                </a>
+
+                <a href="report.html"
+                    class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-md">
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">analytics</span>
+                    Report
+                </a>
+
+                <a href="profile.html"
+                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <span class="material-symbols-outlined">person</span>
+                    Profile
+                </a>
+
+                <a href="setting.html"
+                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+
+            </nav>
+
+            <!-- USER SECTION -->
+            <div class="mt-auto border-t border-gray-200 dark:border-gray-700 pt-4">
+
+                <div class="flex items-center gap-3 px-2">
+                    <img id="sidebarUserImage" class="h-10 w-10 rounded-full object-cover"
+                        src="https://via.placeholder.com/100" />
+                    <p id="sidebarUserName" class="text-sm font-semibold text-gray-800 dark:text-gray-200">User</p>
+                </div>
+
+                <button id="logoutBtn"
+                    class="mt-3 flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md w-full text-left">
+                    <span class="material-symbols-outlined">logout</span>
+                    Logout
+                </button>
+
+            </div>
+        </aside>
+
+        <!-- MAIN REPORT CONTENT -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+            <div class="mx-auto max-w-7xl">
+
+                <!-- HEADER -->
+                <div class="mb-6">
+                    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">Your Performance Report</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400 text-lg">
+                        A detailed breakdown of your latest speaking session.
+                    </p>
+                </div>
+
+                <!-- SESSION STATS + SCORES -->
+                <div id="sessionStats"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Speaking Speed (WPM)</h3>
+                        <p id="avgWPM" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Filler Words</h3>
+                        <p id="fillerWordCount" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Pronunciation Score</h3>
+                        <p id="pronScore" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Tone Score</h3>
+                        <p id="toneScore" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
+                    </div>
+
+                </div>
+
+                <!-- AI ANALYSIS SECTION -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+                    <!-- Raw Transcript -->
+                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Your Transcript</h2>
+                        <div id="rawTranscript"
+                            class="mt-4 h-64 overflow-y-auto text-sm text-gray-700 dark:text-gray-300 border rounded-lg p-4 space-y-2">
+                            <!-- Insert from JS -->
+                        </div>
+                    </div>
+
+                    <!-- AI Improved Transcript -->
+                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow">
+                        <h2 class="text-lg font-semibold text-primary">AI-Improved Version</h2>
+                        <div id="improvedTranscript"
+                            class="mt-4 h-64 overflow-y-auto text-sm text-gray-700 dark:text-gray-300 border rounded-lg p-4 space-y-2">
+                            <!-- Insert from JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- GRAMMAR & VOCAB TABLE -->
+                <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Grammar & Vocabulary Report</h2>
+
+                    <div class="mt-4">
+                        <p class="text-gray-600 dark:text-gray-400 mb-2">Detected errors & improvements</p>
+
+                        <table class="min-w-full border divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr class="text-left text-gray-700 dark:text-gray-200 font-medium">
+                                    <th class="p-3">Issue</th>
+                                    <th class="p-3">Suggestion</th>
+                                    <th class="p-3">Errors</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grammarTable"
+                                class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-300">
+                                <!-- JS will populate -->
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+                <!-- EXTRA ANALYSIS CARDS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+
+                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Clarity Score</h3>
+                        <p id="clarityScore" class="text-3xl font-bold text-primary mt-2">0</p>
+                    </div>
+
+                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Fluency Score</h3>
+                        <p id="fluencyScore" class="text-3xl font-bold text-primary mt-2">0</p>
+                    </div>
+
+                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
+                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Vocabulary Score</h3>
+                        <p id="vocabScore" class="text-3xl font-bold text-primary mt-2">0</p>
+                    </div>
+
+                </div>
+
+                <!-- TIPS & EXERCISES -->
+                <div class="mb-12">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Tips & Exercises</h2>
+
+                    <div id="tipsContainer"
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        <!-- JS will insert exercise cards -->
+
+                    </div>
+                </div>
+
+                <!-- SHARE BUTTON -->
+                <div class="flex justify-end mb-10">
+                    <button
+                        class="flex items-center gap-2 rounded-full border-2 border-primary px-6 py-3 text-primary font-semibold hover:bg-primary/10">
+                        <span class="material-symbols-outlined">share</span>
                         Share Progress
                     </button>
-</div>
-</div>
-</main>
-</div>
-</div>
-</body></html>
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="report.js"></script>
+
+</body>
+
+</html>

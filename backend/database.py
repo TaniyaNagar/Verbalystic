@@ -1,10 +1,19 @@
-import psycopg2
 import os
+import psycopg2
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv(dotenv_path=".env")
-
+# Load .env from project root
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(env_path)
 
 def get_connection():
-    return psycopg2.connect(os.getenv("DATABASE_URL"))
-
+    try:
+        conn = psycopg2.connect(
+            os.getenv("DATABASE_URL"),
+            sslmode="require"
+        )
+        return conn
+    except Exception as e:
+        print("Database Connection Error:", e)
+        raise e

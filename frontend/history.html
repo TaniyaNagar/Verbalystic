@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History – Verbalystic</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+
+    <div class="flex min-h-screen">
+
+        <!-- SIDEBAR -->
+        <aside class="w-64 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+
+            <div class="flex items-center gap-3 mb-6">
+                <div id="sidebarUserImage" class="size-10 rounded-full bg-cover bg-center bg-gray-300"></div>
+                <div>
+                    <p id="sidebarUserName" class="font-semibold text-gray-900 dark:text-gray-100">User</p>
+                </div>
+            </div>
+
+            <nav class="flex flex-col gap-2 text-sm font-medium">
+
+                <a href="main.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    New Session
+                </a>
+
+                <a href="history.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary">
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">history</span>
+                    History
+                </a>
+
+                <a href="report.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    Report
+                </a>
+
+                <a href="profile.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-symbols-outlined">person</span>
+                    Profile
+                </a>
+
+                <a href="setting.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+            </nav>
+
+            <button id="logoutBtn"
+                class="mt-auto flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </button>
+
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+            <div class="max-w-5xl mx-auto">
+
+                <h1 class="text-3xl font-bold mb-4">Session History</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">A list of all your recorded speaking sessions.</p>
+
+                <!-- SESSION LIST -->
+                <div id="historyList" class="space-y-4">
+                    <!-- JS will dynamically insert sessions -->
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="history.js"></script>
+
+</body>
+
+</html>

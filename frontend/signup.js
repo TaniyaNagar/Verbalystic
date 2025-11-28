@@ -1,46 +1,48 @@
-console.log("Signup JS file loaded successfully");
-document.getElementById("signupForm").addEventListener("submit", async (e) => {
-    console.log("Signup JS file loaded successfully");
+document.addEventListener("DOMContentLoaded", () => {
 
-    e.preventDefault();
+    const btn = document.querySelector("button.bg-primary");
+    const nameInput = document.querySelector("input[placeholder='Enter your name']");
+    const emailInput = document.querySelector("input[placeholder='Enter your email']");
+    const passwordInput = document.querySelector("input[placeholder='Enter your password']");
 
-    const form = new FormData(e.target);
-    
-    const name = form.get("name");
-    const email = form.get("email");
-    const password = form.get("password");
-    const confirmPassword = form.get("confirmPassword");
+    alert("inside js");
 
-    console.log("Name:", form.get("name"));
-    console.log("Email:", form.get("email"));
-    if (password !== confirmPassword) {
-        alert("Passwords do not match.");
-        return;
-    }
-    
-    try {
-        const response = await fetch("http://localhost:5000/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                name,
-                email,
-                password
-            })
-        });
+    btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        console.log("Signup button clicked");
 
-        const data = await response.json();
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
 
-        if (!response.ok) {
-            alert(data.message || "Registration failed");
+        if (!name || !email) {
+            alert("Enter name & email");
             return;
         }
 
-        alert("User registered successfully!");
-        window.location.href = "login.html";
+        const payload = { name, email };
 
-    } catch (error) {
-        console.error(error);
-        alert("Error connecting to server.");
-    }
+        try {
+            console.log("Sending request...");
+            const res = await fetch("http://127.0.0.1:8000/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            console.log("Response received");
+
+            const data = await res.json();
+            console.log("Backend Response:", data);
+
+            if (res.ok) {
+                alert("Signup success: " + data.user_id);
+            } else {
+                alert("Error: " + data.detail);
+            }
+
+        } catch (err) {
+            console.error("Request failed:", err);
+            alert("Could not reach backend.");
+        }
+    });
 });
