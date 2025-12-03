@@ -12,15 +12,19 @@
 // - While live: decibel bar updates, audio chunks are sent to server via Socket.IO.
 // - Server may emit "live_transcript" and "live_feedback" events — handled below.
 // - On stop: MediaRecorder final blob is uploaded (if upload endpoint exists), then /create-session is called.
+//cd "C:\Users\zaira\OneDrive\Desktop\Desktop Folder\Verbalystic\backend"
+//.\venv\Scripts\activate
+//uvicorn main:app --reload --port 8000
 
 console.log("Main.js (real-time) loaded");
 
 // ---------- CONFIG ----------
 
 const USER_ID = "c7c92dad-80b2-42ed-b1c1-beb25ec18d07"; // keep from your app
-const SOCKET_URL = "http://127.0.0.1:8000";// change to your realtime server URL
-const UPLOAD_AUDIO_URL = "http://127.0.0.1:8000/upload-audio"; // optional single-file upload endpoint
+const SOCKET_URL = "http://127.0.0.1:8000";
+const UPLOAD_AUDIO_URL = "http://127.0.0.1:8000/upload-audio";
 const CREATE_SESSION_URL = "http://127.0.0.1:8000/create-session";
+
 
 const FILLER_WORDS = ["um", "uh", "like", "you know", "so", "actually", "basically", "right"];
 
@@ -148,10 +152,12 @@ async function initSocket() {
 
     // create socket connected to the FastAPI mount at /ws
     
-    socket = io("http://127.0.0.1:8000", {
+    socket = io(SOCKET_URL, {
         path: "/ws/socket.io",
-        transports: ["websocket"]
+        transports: ["websocket", "polling"],
+        withCredentials: false
     });
+
 
 
 

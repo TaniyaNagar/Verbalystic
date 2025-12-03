@@ -167,18 +167,26 @@
             </div>
 
             <!-- MIC BUTTON + SUGGESTION -->
-            <div class="w-full flex flex-col items-center pb-8 gap-8">
+            <div class="w-full flex flex-col items-center gap-6">
+                <!-- FLOATING GLOW -->
+                <div class="absolute -top-6 w-24 h-24 bg-blue-400/40 blur-2xl rounded-full animate-pulse"></div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-full px-6 py-3 flex items-center gap-3">
-                    <span class="material-icons-outlined text-gray-500 dark:text-gray-400">lightbulb_outline</span>
-                    <p id="suggestionText" class="text-sm text-gray-700 dark:text-gray-300">
+
+                <!-- SUGGESTION BOX -->
+                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-full px-5 py-2.5 flex items-center">
+    
+                    <span class="material-icons-outlined text-gray-500 dark:text-gray-400 text-[18px] leading-none" style="width:24px;">
+                       lightbulb_outline
+                    </span>
+
+                    <span id="suggestionText"class="text-sm text-gray-700 dark:text-gray-300 leading-none ml-[2px]">
                         Suggestion: Try speaking a little louder.
-                    </p>
+                    </span>
                 </div>
 
-                <button id="micButton"
-                    class="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition-colors">
-                    <span class="material-icons-outlined" style="font-size: 32px;">mic</span>
+                <!-- MIC BUTTON -->
+                <button id="micButton"class="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition-colors">
+                    <span class="material-icons-outlined text-[32px]">mic</span>
                 </button>
 
             </div>
