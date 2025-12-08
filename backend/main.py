@@ -7,6 +7,15 @@ from realtime import sio_app      # <-- correct import
 from database import get_connection
 import os
 import time
+from textblob import TextBlob
+
+import bcrypt
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
 
 app = FastAPI()                   # <-- this is your ONLY app
 
@@ -16,11 +25,12 @@ app.mount("/ws", sio_app)         # <-- NOW the WebSocket server works!
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],  # frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # CORS
@@ -38,9 +48,11 @@ app.add_middleware(
 class UserSignup(BaseModel):
     name: str
     email: EmailStr
+    password: str
 
 class UserLogin(BaseModel):
     email: EmailStr
+    password: str
 
 class UpdateProfile(BaseModel):
     user_id: str
@@ -98,11 +110,12 @@ def register(user: UserSignup):
             cur.close(); conn.close()
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        cur.execute("""
-            INSERT INTO users (name, email)
-            VALUES (%s, %s)
-            RETURNING id;
-        """, (user.name, user.email))
+        
+        cur.execute("""INSERT INTO users (name, email, password) VALUES (%s, %s, %s) RETURNING id;""", (
+            user.name,
+            user.email,
+            hash_password(user.password)
+        ))
         print("Loaded DB URL:", os.getenv("DATABASE_URL"))
         new_id = cur.fetchone()[0]
         conn.commit()
@@ -120,15 +133,37 @@ def login(data: UserLogin):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, name, email, profile_image FROM users WHERE email = %s;", (data.email,))
+
+        cur.execute("""
+            SELECT id, name, email, password, profile_image
+            FROM users
+            WHERE email = %s;
+        """, (data.email,))
+
         user = cur.fetchone()
-        cur.close(); conn.close()
+
         if not user:
+            cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="Email not found")
-        return {"message":"Login successful", "user_id": user[0], "name": user[1], "email": user[2], "profile_image": user[3]}
+
+        stored_hash = user[3]
+
+        if not verify_password(data.password, stored_hash):
+            cur.close(); conn.close()
+            raise HTTPException(status_code=400, detail="Incorrect password")
+
+        cur.close(); conn.close()
+
+        return {
+            "message": "Login successful",
+            "user_id": user[0],
+            "name": user[1],
+            "email": user[2],
+            "profile_image": user[4],
+        }
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @app.get("/get-user/{user_id}")
 def get_user(user_id: str):
@@ -177,7 +212,7 @@ def get_user(user_id: str):
         user["weekly_consistency_percent"] = weekly_consistency
 
         cur.close(); conn.close()
-        return {"user": user}
+        return user
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -194,6 +229,17 @@ def update_profile(payload: UpdateProfile):
         if not cur.fetchone():
             cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if new email is already used by another user
+        if payload.email is not None:
+            cur.execute(
+                "SELECT id FROM users WHERE email = %s AND id != %s;",
+                (payload.email, payload.user_id)
+            )
+            if cur.fetchone():
+                cur.close(); conn.close()
+                raise HTTPException(status_code=400, detail="Email already in use")
+
 
         # Build update dynamically
         updates = []
@@ -290,7 +336,10 @@ def get_achievements(user_id: str):
 def create_session(data: SessionCreate):
     try:
         # Run analysis on transcript
-        analysis = analyze_transcript(data.transcript or "")
+        # Prepare transcript safely
+        text = data.transcript or ""
+        analysis = analyze_transcript(text)
+
 
         conn = get_connection()
         cur = conn.cursor()
@@ -453,6 +502,47 @@ async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
         buffer.write(await file.read())
 
     return {"url": file_path}
+class ChangePassword(BaseModel):
+    user_id: str
+    old_password: str
+    new_password: str
+
+@app.post("/change-password")
+def change_password(data: ChangePassword):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        # Fetch existing password hash
+        cur.execute("SELECT password FROM users WHERE id = %s;", (data.user_id,))
+        row = cur.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        stored_hash = row[0]
+
+        # Check old password
+        if not verify_password(data.old_password, stored_hash):
+            raise HTTPException(status_code=400, detail="Incorrect old password")
+
+        # Hash new password
+        new_hash = hash_password(data.new_password)
+
+        # Update password
+        cur.execute(
+            "UPDATE users SET password = %s WHERE id = %s;",
+            (new_hash, data.user_id)
+        )
+        conn.commit()
+
+        cur.close(); conn.close()
+
+        return {"message": "Password updated successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 def analyze_transcript(text: str):
     """
     Simple NLP-based scoring:
@@ -483,8 +573,8 @@ def analyze_transcript(text: str):
     pronunciation_score = round((unique_words / (len(words) + 1)) * 100, 2)
 
     # Simple tone score (polarity)
-    import textblob
-    blob = textblob.TextBlob(text)
+    blob = TextBlob(text)
+
     tone_score = round((blob.sentiment.polarity + 1) * 50)  # convert -1..1 → 0..100
 
     # Simple grammar score = (sentences without errors)
