@@ -3,8 +3,8 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from realtime import sio_app      # <-- correct import
-from database import get_connection
+from backend.realtime import sio_app      # <-- correct import
+from backend.database import get_connection
 import os
 import time
 from textblob import TextBlob
