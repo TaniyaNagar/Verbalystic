@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\zaira\OneDrive\Desktop\Desktop Folder\Verbalystic\backend\venv
+set VIRTUAL_ENV=C:\Users\nagar\Desktop\Minor\Verbalystic\backend\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

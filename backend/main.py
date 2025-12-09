@@ -7,6 +7,9 @@ from realtime import sio_app      # <-- correct import
 from database import get_connection
 import os
 import time
+from routes.report_route import router as report_router
+
+
 
 app = FastAPI()                   # <-- this is your ONLY app
 
@@ -22,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(report_router)
 
 # CORS
 app.add_middleware(
