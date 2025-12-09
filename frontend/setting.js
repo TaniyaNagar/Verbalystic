@@ -21,36 +21,32 @@ async function loadSettings() {
 }
 
 // Update name + email
-document.getElementById("editSettingsBtn").addEventListener("click", async () => {
-    const newName = prompt("Enter new name:");
-    if (!newName) return;
+document.getElementById("changePasswordBtn").addEventListener("click", async () => {
+    const oldPw = prompt("Enter your current password:");
+    if (!oldPw) return;
 
-    const newEmail = prompt("Enter new email:");
-    if (!newEmail) return;
+    const newPw = prompt("Enter your new password:");
+    if (!newPw) return;
 
-    try {
-        const res = await fetch("http://127.0.0.1:8000/update-profile", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: USER_ID,
-                name: newName,
-                email: newEmail
-            })
-        });
+    const res = await fetch("http://127.0.0.1:8000/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: USER_ID,
+            old_password: oldPw,
+            new_password: newPw
+        })
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if (res.ok) {
-            alert("Profile updated!");
-            loadSettings();
-        } else {
-            alert("Update failed: " + data.detail);
-        }
-    } catch (error) {
-        console.error("Error updating profile:", error);
+    if (res.ok) {
+        alert("Password changed successfully!");
+    } else {
+        alert("Error: " + data.detail);
     }
 });
+
 
 // Logout
 document.getElementById("logoutBtn").addEventListener("click", () => {

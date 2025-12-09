@@ -5,7 +5,7 @@ import socketio
 from vosk import Model, KaldiRecognizer
 
 # ---- CONFIG ----
-MODEL_PATH = "vosk-model-small-en-us-0.15"   # <<-- change this to your model folder name if different
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "vosk-model-small-en-us-0.15")   # <<-- change this to your model folder name if different
 SAMPLE_RATE = 16000.0
 
 # ---- Load model once (startup) ----

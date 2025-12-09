@@ -431,12 +431,12 @@ async function stopRecording() {
         } else {
             const txt = await res.text();
             console.error("create-session failed:", res.status, txt);
-            alert("Failed to save session (create-session). Check console.");
+     
             updateSuggestionText("Failed to save session.");
         }
     } catch (err) {
         console.error("create-session error:", err);
-        alert("Failed to save session (network error).");
+        
         updateSuggestionText("Failed to save session.");
     }
 
