@@ -1,47 +1,58 @@
 console.log("report.js loaded");
 
-// Get logged-in user ID
-const USER_ID = localStorage.getItem("user_id");
-
-
+const USER_ID = "c7c92dad-80b2-42ed-b1c1-beb25ec18d07";
 
 async function loadLatestReport() {
     try {
         const res = await fetch(`http://127.0.0.1:8000/get-latest-report/${USER_ID}`);
         const data = await res.json();
 
-        console.log("REPORT DATA:", data);
-
         if (!res.ok) {
-            alert("No report found. Do a speaking session first.");
+            alert(data.detail || "No report found");
             return;
         }
+        console.log("Report Loaded");
+        console.log("REPORT:", data);
 
-        // Display scores
-        document.getElementById("grammarScore").innerText = data.grammar_score ?? "—";
-        document.getElementById("fluencyScore").innerText = data.fluency_score ?? "—";
-        document.getElementById("clarityScore").innerText = data.clarity_score ?? "—";
-        document.getElementById("vocabularyScore").innerText = data.vocabulary_score ?? "—";
+        // TOP CARDS
+        document.getElementById("avgWPM").innerText = data.avg_wpm ?? "0";
+        document.getElementById("fillerWordCount").innerText = data.filler_word_count ?? "0";
+        document.getElementById("pronScore").innerText = data.pronunciation_score ?? "0";
+        document.getElementById("toneScore").innerText = data.tone_score ?? "0";
 
-        // Filler words
-        document.getElementById("fillerWords").innerText = data.filler_words_detected ?? 0;
+        // TRANSCRIPT
+        document.getElementById("rawTranscript").innerText = data.transcript || "—";
+        document.getElementById("improvedTranscript").innerText = data.summary_report || "—";
 
-        // Grammar errors
-        document.getElementById("grammarErrors").innerText = data.grammatical_errors ?? 0;
+        // SCORES
+        document.getElementById("clarityScore").innerText = data.clarity_score ?? "0";
+        document.getElementById("fluencyScore").innerText = data.fluency_score ?? "0";
+        document.getElementById("vocabScore").innerText = data.vocabulary_score ?? "0";
 
-        // Transcript
-        document.getElementById("transcriptContent").innerText = data.transcript || "No transcript available";
+        // GRAMMAR TABLE
+        const grammarTable = document.getElementById("grammarTable");
+        grammarTable.innerHTML = "";
 
-        // Improved transcript
-        document.getElementById("improvedTranscript").innerText =
-            data.summary_report || "No improved version available";
+        if (data.grammar_report) {
+            const issues = JSON.parse(data.grammar_report);
 
-        // AI Recommendations
-        document.getElementById("recommendations").innerText =
-            data.recommendations || "No suggestions";
+            issues.forEach(issue => {
+                grammarTable.innerHTML += `
+                    <tr>
+                        <td class="p-3">${issue.issue}</td>
+                        <td class="p-3">${issue.suggestion}</td>
+                        <td class="p-3">${issue.errorCount}</td>
+                    </tr>
+                `;
+            });
+        }
 
-    } catch (error) {
-        console.error("Error loading report:", error);
+        // Recommendations
+        document.getElementById("tipsContainer").innerHTML =
+            `<p class="text-gray-700">${data.recommendations || "No recommendations"}</p>`;
+
+    } catch (err) {
+        console.error("Report load failed:", err);
     }
 }
 
