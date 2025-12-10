@@ -1,49 +1,45 @@
-#main py
+# main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from backend.realtime import sio_app      # <-- correct import
-from backend.database import get_connection
+from realtime import sio_app
+from database import get_connection
+
+from textblob import TextBlob
+import bcrypt
 import os
 import time
-from textblob import TextBlob
 
-import bcrypt
+# -------------------------
+# Password Utils
+# -------------------------
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
-app = FastAPI()                   # <-- this is your ONLY app
+# -------------------------
+# FastAPI App
+# -------------------------
+app = FastAPI()
 
-# mount socket.io ASGI app
-app.mount("/ws", sio_app)         # <-- NOW the WebSocket server works!
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
+# Mount Socket.io app
+app.mount("/ws", sio_app)
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten for production
+    allow_origins=["*"],       # tighten later for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -------------------------
-# Pydantic models
+# Pydantic Models
 # -------------------------
 class UserSignup(BaseModel):
     name: str
@@ -84,48 +80,50 @@ class AnalysisCreate(BaseModel):
     summary_report: Optional[str] = None
     recommendations: Optional[str] = None
 
+class ChangePassword(BaseModel):
+    user_id: str
+    old_password: str
+    new_password: str
+
 # -------------------------
-# Utility
+# Helpers
 # -------------------------
 def fetchone_dict(cur):
-    """Helper to return dict from cursor.fetchone using cursor.description"""
     row = cur.fetchone()
-    if row is None:
+    if not row:
         return None
     cols = [c[0] for c in cur.description]
     return dict(zip(cols, row))
 
+
 # -------------------------
-# User endpoints
+# USER ENDPOINTS
 # -------------------------
 @app.post("/register")
 def register(user: UserSignup):
-    print("Loaded DB URL:", os.getenv("DATABASE_URL"))
-
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id FROM users WHERE email = %s;", (user.email,))
+
+        cur.execute("SELECT id FROM users WHERE email = %s", (user.email,))
         if cur.fetchone():
-            cur.close(); conn.close()
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        
-        cur.execute("""INSERT INTO users (name, email, password) VALUES (%s, %s, %s) RETURNING id;""", (
-            user.name,
-            user.email,
-            hash_password(user.password)
-        ))
-        print("Loaded DB URL:", os.getenv("DATABASE_URL"))
-        new_id = cur.fetchone()[0]
-        conn.commit()
-        cur.close(); conn.close()
-        print("Loaded DB URL:", os.getenv("DATABASE_URL"))
+        cur.execute("""
+            INSERT INTO users (name, email, password)
+            VALUES (%s, %s, %s)
+            RETURNING id;
+        """, (user.name, user.email, hash_password(user.password)))
 
-        return {"message": "User registered", "user_id": new_id}
+        user_id = cur.fetchone()[0]
+        conn.commit()
+        return {"message": "User registered", "user_id": user_id}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.post("/login")
@@ -136,23 +134,15 @@ def login(data: UserLogin):
 
         cur.execute("""
             SELECT id, name, email, password, profile_image
-            FROM users
-            WHERE email = %s;
+            FROM users WHERE email = %s
         """, (data.email,))
-
         user = cur.fetchone()
 
         if not user:
-            cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="Email not found")
 
-        stored_hash = user[3]
-
-        if not verify_password(data.password, stored_hash):
-            cur.close(); conn.close()
+        if not verify_password(data.password, user[3]):
             raise HTTPException(status_code=400, detail="Incorrect password")
-
-        cur.close(); conn.close()
 
         return {
             "message": "Login successful",
@@ -164,58 +154,60 @@ def login(data: UserLogin):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
+
 
 @app.get("/get-user/{user_id}")
 def get_user(user_id: str):
-    """
-    Returns profile info + quick stats needed for the Profile page:
-    - name, email, profile_image
-    - streak_count, total_points
-    - total_sessions, speaking_minutes (sum duration_seconds)
-    """
     try:
         conn = get_connection()
         cur = conn.cursor()
 
-        # profile
-        cur.execute("SELECT id, name, email, profile_image, total_points, streak_count, level, created_at FROM users WHERE id = %s;", (user_id,))
-        user_row = cur.fetchone()
-        if not user_row:
-            cur.close(); conn.close()
+        cur.execute("""
+            SELECT id, name, email, profile_image, total_points, streak_count, level, created_at
+            FROM users WHERE id = %s
+        """, (user_id,))
+        data = cur.fetchone()
+
+        if not data:
             raise HTTPException(status_code=404, detail="User not found")
 
         user = {
-            "id": user_row[0],
-            "name": user_row[1],
-            "email": user_row[2],
-            "profile_image": user_row[3],
-            "total_points": user_row[4],
-            "streak_count": user_row[5],
-            "level": user_row[6],
-            "created_at": user_row[7]
+            "id": data[0],
+            "name": data[1],
+            "email": data[2],
+            "profile_image": data[3],
+            "total_points": data[4],
+            "streak_count": data[5],
+            "level": data[6],
+            "created_at": data[7],
         }
 
-        # total sessions and speaking minutes
-        cur.execute("SELECT COUNT(*) AS total_sessions, COALESCE(SUM(duration_seconds),0) AS speaking_minutes FROM sessions WHERE user_id = %s;", (user_id,))
-        sess_stats = cur.fetchone()
-        user["total_sessions"] = sess_stats[0]
-        user["speaking_minutes"] = sess_stats[1]
-
-        # weekly consistency (simple placeholder: percent of days with sessions in last 7 days)
         cur.execute("""
-            SELECT COUNT(DISTINCT date_trunc('day', session_at)) AS active_days
-            FROM sessions
-            WHERE user_id = %s AND session_at >= now() - interval '7 days';
+            SELECT COUNT(*), COALESCE(SUM(duration_seconds), 0)
+            FROM sessions WHERE user_id = %s
         """, (user_id,))
-        active_days = cur.fetchone()[0]
-        weekly_consistency = int((active_days / 7.0) * 100)
-        user["weekly_consistency_percent"] = weekly_consistency
+        stats = cur.fetchone()
+        user["total_sessions"] = stats[0]
+        user["speaking_minutes"] = stats[1]
 
-        cur.close(); conn.close()
+        cur.execute("""
+            SELECT COUNT(DISTINCT date_trunc('day', session_at))
+            FROM sessions
+            WHERE user_id = %s AND session_at >= now() - interval '7 days'
+        """, (user_id,))
+        days = cur.fetchone()[0]
+        user["weekly_consistency_percent"] = int((days / 7) * 100)
+
         return user
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.post("/update-profile")
@@ -224,46 +216,52 @@ def update_profile(payload: UpdateProfile):
         conn = get_connection()
         cur = conn.cursor()
 
-        # Check user exists
-        cur.execute("SELECT id FROM users WHERE id = %s;", (payload.user_id,))
+        cur.execute("SELECT id FROM users WHERE id = %s", (payload.user_id,))
         if not cur.fetchone():
-            cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="User not found")
-        
-        # Check if new email is already used by another user
-        if payload.email is not None:
-            cur.execute(
-                "SELECT id FROM users WHERE email = %s AND id != %s;",
-                (payload.email, payload.user_id)
-            )
+
+        if payload.email:
+            cur.execute("SELECT id FROM users WHERE email = %s AND id != %s",
+                        (payload.email, payload.user_id))
             if cur.fetchone():
-                cur.close(); conn.close()
                 raise HTTPException(status_code=400, detail="Email already in use")
 
-
-        # Build update dynamically
         updates = []
         params = []
-        if payload.name is not None:
-            updates.append("name = %s"); params.append(payload.name)
-        if payload.email is not None:
-            updates.append("email = %s"); params.append(payload.email)
-        if payload.profile_image is not None:
-            updates.append("profile_image = %s"); params.append(payload.profile_image)
+        if payload.name:
+            updates.append("name=%s"); params.append(payload.name)
+        if payload.email:
+            updates.append("email=%s"); params.append(payload.email)
+        if payload.profile_image:
+            updates.append("profile_image=%s"); params.append(payload.profile_image)
 
         if not updates:
-            cur.close(); conn.close()
             raise HTTPException(status_code=400, detail="No fields to update")
 
         params.append(payload.user_id)
-        sql = f"UPDATE users SET {', '.join(updates)} WHERE id = %s RETURNING id, name, email, profile_image;"
-        cur.execute(sql, tuple(params))
+
+        cur.execute(
+            f"UPDATE users SET {', '.join(updates)} WHERE id=%s RETURNING id,name,email,profile_image",
+            tuple(params)
+        )
         updated = cur.fetchone()
         conn.commit()
-        cur.close(); conn.close()
-        return {"message": "Profile updated", "user": {"id": updated[0], "name": updated[1], "email": updated[2], "profile_image": updated[3]}}
+
+        return {
+            "message": "Profile updated",
+            "user": {
+                "id": updated[0],
+                "name": updated[1],
+                "email": updated[2],
+                "profile_image": updated[3],
+            },
+        }
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.delete("/delete-account/{user_id}")
@@ -271,42 +269,56 @@ def delete_account(user_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        # This will cascade-delete sessions, analysis_report, user_badge, etc. due to your FK ON DELETE CASCADE.
-        cur.execute("DELETE FROM users WHERE id = %s RETURNING id;", (user_id,))
+
+        cur.execute("DELETE FROM users WHERE id=%s RETURNING id", (user_id,))
         deleted = cur.fetchone()
+
         if not deleted:
-            cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="User not found")
+
         conn.commit()
-        cur.close(); conn.close()
         return {"message": "Account deleted", "user_id": deleted[0]}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 # -------------------------
-# Roadmap & Achievements endpoints
+# ROADMAP & ACHIEVEMENTS
 # -------------------------
 @app.get("/get-roadmap/{user_id}")
 def get_roadmap(user_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, skill_focus, ai_recommendations, progress_status, updated_at FROM learning_roadmap WHERE user_id = %s ORDER BY updated_at DESC;", (user_id,))
+
+        cur.execute("""
+            SELECT id, skill_focus, ai_recommendations, progress_status, updated_at
+            FROM learning_roadmap
+            WHERE user_id = %s
+            ORDER BY updated_at DESC
+        """, (user_id,))
         rows = cur.fetchall()
-        roadmaps = []
-        for r in rows:
-            roadmaps.append({
+
+        return {"roadmap": [
+            {
                 "id": r[0],
                 "skill_focus": r[1],
                 "ai_recommendations": r[2],
                 "progress_status": r[3],
-                "updated_at": r[4]
-            })
-        cur.close(); conn.close()
-        return {"roadmap": roadmaps}
+                "updated_at": r[4],
+            }
+            for r in rows
+        ]}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.get("/get-achievements/{user_id}")
@@ -314,35 +326,40 @@ def get_achievements(user_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
+
         cur.execute("""
             SELECT b.id, b.name, b.description, ub.earned_date
             FROM user_badge ub
             JOIN badges b ON ub.badge_id = b.id
             WHERE ub.user_id = %s
-            ORDER BY ub.earned_date DESC;
+            ORDER BY ub.earned_date DESC
         """, (user_id,))
         rows = cur.fetchall()
-        badges = [{"id": r[0], "name": r[1], "description": r[2], "earned_date": r[3]} for r in rows]
-        cur.close(); conn.close()
-        return {"achievements": badges}
+
+        return {"achievements": [
+            {"id": r[0], "name": r[1], "description": r[2], "earned_date": r[3]}
+            for r in rows
+        ]}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 # -------------------------
-# Session / Analysis endpoints (create)
+# SESSION & ANALYSIS
 # -------------------------
 @app.post("/create-session")
 def create_session(data: SessionCreate):
     try:
-        # Run analysis on transcript
-        # Prepare transcript safely
         text = data.transcript or ""
         analysis = analyze_transcript(text)
 
-
         conn = get_connection()
         cur = conn.cursor()
+
         cur.execute("""
             INSERT INTO sessions
             (user_id, audio_url, transcript, duration_seconds, session_at,
@@ -350,24 +367,22 @@ def create_session(data: SessionCreate):
             VALUES (%s,%s,%s,%s,now(),%s,%s,%s,%s,%s)
             RETURNING id;
         """, (
-            data.user_id,
-            data.audio_url,
-            data.transcript,
-            data.duration_seconds,
-            data.avg_wpm,
-            analysis["filler_word_count"],
-            analysis["pronunciation_score"],
-            analysis["tone_score"],
+            data.user_id, data.audio_url, data.transcript, data.duration_seconds,
+            data.avg_wpm, analysis["filler_word_count"],
+            analysis["pronunciation_score"], analysis["tone_score"],
             analysis["grammar_score"]
         ))
+
         session_id = cur.fetchone()[0]
         conn.commit()
-        cur.close(); conn.close()
 
         return {"message": "Session saved", "session_id": session_id}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.post("/create-analysis")
@@ -375,11 +390,13 @@ def create_analysis(data: AnalysisCreate):
     try:
         conn = get_connection()
         cur = conn.cursor()
+
         cur.execute("""
             INSERT INTO analysis_report
             (session_id, vocabulary_score, fluency_score, clarity_score,
              filler_words_detected, grammatical_errors, grammar_report,
-             vocabulary_suggestions, tone_analysis, summary_report, recommendations, created_at)
+             vocabulary_suggestions, tone_analysis, summary_report,
+             recommendations, created_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now())
             RETURNING id;
         """, (
@@ -389,44 +406,51 @@ def create_analysis(data: AnalysisCreate):
             data.vocabulary_suggestions, data.tone_analysis,
             data.summary_report, data.recommendations
         ))
+
         report_id = cur.fetchone()[0]
         conn.commit()
-        cur.close(); conn.close()
-        return {"message":"Analysis saved", "report_id": report_id}
+
+        return {"message": "Analysis saved", "report_id": report_id}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 
 # -------------------------
-# Get latest report (keeps same contract as before)
+# LATEST REPORT
 # -------------------------
 @app.get("/get-latest-report/{user_id}")
 def get_latest_report(user_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
+
         cur.execute("""
-            SELECT id, session_at, avg_wpm, filler_word_count, pronunciation_score, tone_score, grammar_score
+            SELECT id, session_at, avg_wpm, filler_word_count, pronunciation_score,
+                   tone_score, grammar_score
             FROM sessions
             WHERE user_id = %s
             ORDER BY session_at DESC
             LIMIT 1;
         """, (user_id,))
         session = cur.fetchone()
+
         if not session:
-            cur.close(); conn.close()
             raise HTTPException(status_code=404, detail="No sessions found")
 
         session_id = session[0]
+
         cur.execute("""
-            SELECT vocabulary_score, fluency_score, clarity_score, filler_words_detected,
-                   grammatical_errors, grammar_report, vocabulary_suggestions,
-                   tone_analysis, summary_report, recommendations
-            FROM analysis_report
-            WHERE session_id = %s;
+            SELECT vocabulary_score, fluency_score, clarity_score,
+                   filler_words_detected, grammatical_errors, grammar_report,
+                   vocabulary_suggestions, tone_analysis, summary_report,
+                   recommendations
+            FROM analysis_report WHERE session_id = %s
         """, (session_id,))
         analysis = cur.fetchone()
-        cur.close(); conn.close()
 
         return {
             "session": {
@@ -448,13 +472,19 @@ def get_latest_report(user_id: str):
                 "vocabulary_suggestions": analysis[6] if analysis else None,
                 "tone_analysis": analysis[7] if analysis else None,
                 "summary_report": analysis[8] if analysis else None,
-                "recommendations": analysis[9] if analysis else None
-            }
+                "recommendations": analysis[9] if analysis else None,
+            },
         }
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    # -------------------------
-# Get all sessions for history page
+    finally:
+        cur.close()
+        conn.close()
+
+
+# -------------------------
+# SESSION HISTORY
 # -------------------------
 @app.get("/sessions/by-user/{user_id}")
 def get_sessions_by_user(user_id: str):
@@ -467,32 +497,36 @@ def get_sessions_by_user(user_id: str):
                    pronunciation_score, tone_score, grammar_score
             FROM sessions
             WHERE user_id = %s
-            ORDER BY session_at DESC;
+            ORDER BY session_at DESC
         """, (user_id,))
-
         rows = cur.fetchall()
-        cur.close(); conn.close()
 
-        sessions = []
-        for r in rows:
-            sessions.append({
+        return {"sessions": [
+            {
                 "id": r[0],
                 "session_at": r[1],
                 "duration_seconds": r[2],
                 "avg_wpm": r[3],
                 "pronunciation_score": r[4],
                 "tone_score": r[5],
-                "grammar_score": r[6]
-            })
-
-        return {"sessions": sessions}
+                "grammar_score": r[6],
+            }
+            for r in rows
+        ]}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+    finally:
+        cur.close()
+        conn.close()
+
+
+# -------------------------
+# AUDIO UPLOAD
+# -------------------------
 UPLOAD_DIR = "uploaded_audio"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-    
+
 @app.post("/upload-audio")
 async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
     filename = f"{user_id}_{int(time.time())}.webm"
@@ -502,56 +536,45 @@ async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
         buffer.write(await file.read())
 
     return {"url": file_path}
-class ChangePassword(BaseModel):
-    user_id: str
-    old_password: str
-    new_password: str
 
+
+# -------------------------
+# CHANGE PASSWORD
+# -------------------------
 @app.post("/change-password")
 def change_password(data: ChangePassword):
     try:
         conn = get_connection()
         cur = conn.cursor()
 
-        # Fetch existing password hash
-        cur.execute("SELECT password FROM users WHERE id = %s;", (data.user_id,))
+        cur.execute("SELECT password FROM users WHERE id=%s", (data.user_id,))
         row = cur.fetchone()
 
         if not row:
             raise HTTPException(status_code=404, detail="User not found")
 
-        stored_hash = row[0]
-
-        # Check old password
-        if not verify_password(data.old_password, stored_hash):
+        if not verify_password(data.old_password, row[0]):
             raise HTTPException(status_code=400, detail="Incorrect old password")
 
-        # Hash new password
         new_hash = hash_password(data.new_password)
 
-        # Update password
-        cur.execute(
-            "UPDATE users SET password = %s WHERE id = %s;",
-            (new_hash, data.user_id)
-        )
+        cur.execute("UPDATE users SET password=%s WHERE id=%s",
+                    (new_hash, data.user_id))
         conn.commit()
-
-        cur.close(); conn.close()
 
         return {"message": "Password updated successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
+
+# -------------------------
+# ANALYSIS FUNCTION
+# -------------------------
 def analyze_transcript(text: str):
-    """
-    Simple NLP-based scoring:
-    - filler words count
-    - pronunciation score (proxy: word clarity ratio)
-    - tone score (sentiment)
-    - grammar score (grammar mistakes)
-    """
-
     if not text:
         return {
             "filler_word_count": 0,
@@ -563,21 +586,14 @@ def analyze_transcript(text: str):
     filler_words = ["um", "uh", "like", "you know", "actually", "basically", "so"]
     lower = text.lower()
 
-    filler_count = 0
-    for f in filler_words:
-        filler_count += lower.count(f)
+    filler_count = sum(lower.count(w) for w in filler_words)
 
-    # Simple pronunciation score (word clarity) = longer sentences = higher clarity
     words = text.split()
     unique_words = len(set(words))
     pronunciation_score = round((unique_words / (len(words) + 1)) * 100, 2)
 
-    # Simple tone score (polarity)
     blob = TextBlob(text)
-
-    tone_score = round((blob.sentiment.polarity + 1) * 50)  # convert -1..1 → 0..100
-
-    # Simple grammar score = (sentences without errors)
+    tone_score = round((blob.sentiment.polarity + 1) * 50)
     grammar_score = 100 - (abs(blob.sentiment.subjectivity - 0.5) * 100)
 
     return {
