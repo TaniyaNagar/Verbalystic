@@ -1,17 +1,12 @@
 console.log("Login.js loaded");
 
-// Get elements
-const loginForm = document.getElementById("loginForm");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
+const form = document.getElementById("loginForm");
 
-// Main login handler
-loginBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
+form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // stop native form submit
 
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    const email = form.elements["email"].value.trim().toLowerCase();
+    const password = form.elements["password"].value.trim();
 
     if (!email || !password) {
         alert("Please enter both email and password.");
@@ -29,23 +24,20 @@ loginBtn.addEventListener("click", async (e) => {
         console.log("LOGIN RESPONSE:", data);
 
         if (!response.ok) {
-            alert("Login failed: " + (data.detail || "Invalid credentials"));
+            alert(data.detail || "Invalid credentials");
             return;
         }
 
-        // Save important user data
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("name", data.name);
         localStorage.setItem("email", data.email);
         localStorage.setItem("profile_image", data.profile_image || "");
 
         alert("Login successful!");
-
-        // Redirect user to dashboard/home
         window.location.href = "main.html";
 
     } catch (err) {
         console.error("Login error:", err);
-        alert("Unable to connect to server. Check if backend is running.");
+        alert("Backend not reachable.");
     }
 });

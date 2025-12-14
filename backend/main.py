@@ -3,21 +3,15 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+
 from realtime import sio_app
 from database import get_connection
+from routes.report_route import router as report_router
 
 from textblob import TextBlob
 import bcrypt
 import os
 import time
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-from routes.report_route import router as report_router
-
-=======
-from textblob import TextBlob
->>>>>>> 484143560ee2131c7740ad41eaa90487742bd53f
 
 # -------------------------
 # Password Utils
@@ -26,12 +20,7 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-<<<<<<< HEAD
-    return bcrypt.checkpw(password.encode(), hashed.encode())
-=======
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
->>>>>>> e3c7797cd900a58668e50b4d3140ff648180f259
->>>>>>> 484143560ee2131c7740ad41eaa90487742bd53f
 
 
 # -------------------------
@@ -45,10 +34,7 @@ app.mount("/ws", sio_app)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-<<<<<<< HEAD
     allow_origins=["*"],       # tighten later for production
-=======
-    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,16 +42,6 @@ app.add_middleware(
 
 app.include_router(report_router)
 
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # tighten for production
->>>>>>> 484143560ee2131c7740ad41eaa90487742bd53f
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # -------------------------
 # Pydantic Models
@@ -148,8 +124,12 @@ def register(user: UserSignup):
         conn.commit()
         return {"message": "User registered", "user_id": user_id}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print("LOGIN ERROR:", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
     finally:
         cur.close()
         conn.close()
