@@ -4,13 +4,14 @@ console.log("Main.js (real-time) loaded");
    Supabase Initialization
    ========================= */
 
-const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
 
 const supabase = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
+
 
 /* =========================
    Config
@@ -27,16 +28,17 @@ const FILLER_WORDS = ["um", "uh", "like", "you know", "so", "actually", "basical
    ========================= */
 
 async function getAuthenticatedUser() {
-    const { data, error } = await supabase.auth.getUser();
+    const { data: sessionData, error } = await supabase.auth.getSession();
 
-    if (error || !data.user) {
-        console.warn("User not authenticated");
+    if (error || !sessionData.session) {
+        console.warn("No active Supabase session");
         window.location.href = "login.html";
         return null;
     }
 
-    return data.user;
+    return sessionData.session.user;
 }
+
 
 /* =========================
    State

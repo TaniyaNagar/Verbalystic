@@ -1,0 +1,17 @@
+# Env
+.env
+
+# Virtual env
+venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Uploads
+uploaded_audio/
+backend/uploaded_audio/

@@ -1,17 +1,18 @@
-# Ignore environment variables
+# Environment variables
 .env
+
+# Python virtual environment
+venv/
+backend/venv/
 
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
 
-# VS Code settings
+# VS Code
 .vscode/
 
 # OS files
 .DS_Store
 Thumbs.db
-
-venv/
-backend/venv/

@@ -1,43 +1,39 @@
-console.log("Login.js loaded");
+console.log("login.js loaded");
+
+// Supabase init
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
 
 const form = document.getElementById("loginForm");
 
 form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // stop native form submit
+    e.preventDefault();
 
     const email = form.elements["email"].value.trim().toLowerCase();
     const password = form.elements["password"].value.trim();
 
     if (!email || !password) {
-        alert("Please enter both email and password.");
+        alert("Email and password required");
         return;
     }
 
-    try {
-        const response = await fetch("http://127.0.0.1:8000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
 
-        const data = await response.json();
-        console.log("LOGIN RESPONSE:", data);
-
-        if (!response.ok) {
-            alert(data.detail || "Invalid credentials");
-            return;
-        }
-
-        localStorage.setItem("user_id", data.user_id);
-        localStorage.setItem("name", data.name);
-        localStorage.setItem("email", data.email);
-        localStorage.setItem("profile_image", data.profile_image || "");
-
-        alert("Login successful!");
-        window.location.href = "main.html";
-
-    } catch (err) {
-        console.error("Login error:", err);
-        alert("Backend not reachable.");
+    if (error) {
+        alert(error.message);
+        return;
     }
+
+    console.log("Logged in:", data.user);
+
+    // Supabase session is now active
+    window.location.href = "main.html";
 });

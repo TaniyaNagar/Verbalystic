@@ -4,128 +4,95 @@ console.log("setting.js loaded");
    Supabase Initialization
    ========================= */
 
-const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
 
 const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
 );
 
 /* =========================
-   Auth Check
-   ========================= */
-
-async function getAuthenticatedUser() {
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error || !data.user) {
-        console.warn("User not authenticated");
-        window.location.href = "login.html";
-        return null;
-    }
-
-    return data.user;
-}
-
-/* =========================
-   Load User Settings
+   AUTH + LOAD SETTINGS
    ========================= */
 
 async function loadSettings() {
-    const user = await getAuthenticatedUser();
-    if (!user) return;
+  // 1️⃣ Check session first
+  const { data: sessionData } = await supabase.auth.getSession();
 
+  if (!sessionData.session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // 2️⃣ Get authenticated user
+  const user = sessionData.session.user;
+  console.log("AUTH USER:", user);
+
+  // 3️⃣ Email (always from auth)
+  document.getElementById("settingEmail").innerText =
+    user.email || "—";
+
+  // 4️⃣ Name (metadata → fallback backend)
+  if (user.user_metadata?.name) {
+    document.getElementById("settingName").innerText =
+      user.user_metadata.name;
+  } else {
     try {
-        const res = await fetch(
-            `http://127.0.0.1:8000/get-user/${user.id}`,
-            {
-                method: "GET",
-                credentials: "include"
-            }
-        );
+      const res = await fetch(
+        `http://127.0.0.1:8000/get-user/${user.id}`
+      );
 
-        if (!res.ok) {
-            const err = await res.text();
-            console.error("Failed to load settings:", err);
-            alert("Unable to load user settings");
-            return;
-        }
-
+      if (res.ok) {
         const data = await res.json();
-        console.log("SETTINGS DATA:", data);
-
         document.getElementById("settingName").innerText =
-            data.name || "—";
-        document.getElementById("settingEmail").innerText =
-            data.email || "—";
-
-    } catch (error) {
-        console.error("Error loading settings:", error);
-        alert("Network error");
+          data.name || "—";
+      } else {
+        document.getElementById("settingName").innerText = "—";
+      }
+    } catch (err) {
+      console.warn("Backend name fetch failed");
+      document.getElementById("settingName").innerText = "—";
     }
+  }
 }
 
 /* =========================
-   Change Password
+   CHANGE PASSWORD
    ========================= */
 
 document
-    .getElementById("changePasswordBtn")
-    .addEventListener("click", async () => {
+  .getElementById("changePasswordBtn")
+  .addEventListener("click", async () => {
+    const newPassword = prompt("Enter your new password:");
+    if (!newPassword) return;
 
-        const oldPw = prompt("Enter your current password:");
-        if (!oldPw) return;
-
-        const newPw = prompt("Enter your new password:");
-        if (!newPw) return;
-
-        const user = await getAuthenticatedUser();
-        if (!user) return;
-
-        try {
-            const res = await fetch(
-                "http://127.0.0.1:8000/change-password",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        old_password: oldPw,
-                        new_password: newPw
-                    })
-                }
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.detail || "Password change failed");
-                return;
-            }
-
-            alert("Password changed successfully!");
-
-        } catch (err) {
-            console.error("Password change error:", err);
-            alert("Network error");
-        }
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
     });
 
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Password updated successfully!");
+  });
+
 /* =========================
-   Logout
+   LOGOUT
    ========================= */
 
 document
-    .getElementById("logoutBtn")
-    .addEventListener("click", async () => {
-        await supabase.auth.signOut();
-        window.location.href = "login.html";
-    });
+  .getElementById("logoutBtn")
+  .addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "login.html";
+  });
 
 /* =========================
-   Init
+   INIT
    ========================= */
 
 loadSettings();
