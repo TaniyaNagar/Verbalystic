@@ -1,57 +1,98 @@
 console.log("setting.js loaded");
 
-const USER_ID = localStorage.getItem("user_id");
+/* =========================
+   Supabase Initialization
+   ========================= */
 
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+/* =========================
+   AUTH + LOAD SETTINGS
+   ========================= */
 
 async function loadSettings() {
+  // 1️⃣ Check session first
+  const { data: sessionData } = await supabase.auth.getSession();
+
+  if (!sessionData.session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // 2️⃣ Get authenticated user
+  const user = sessionData.session.user;
+  console.log("AUTH USER:", user);
+
+  // 3️⃣ Email (always from auth)
+  document.getElementById("settingEmail").innerText =
+    user.email || "—";
+
+  // 4️⃣ Name (metadata → fallback backend)
+  if (user.user_metadata?.name) {
+    document.getElementById("settingName").innerText =
+      user.user_metadata.name;
+  } else {
     try {
-        const res = await fetch(`http://127.0.0.1:8000/get-user/${USER_ID}`);
+      const res = await fetch(
+        `http://127.0.0.1:8000/get-user/${user.id}`
+      );
+
+      if (res.ok) {
         const data = await res.json();
-
-        console.log("SETTINGS DATA:", data);
-
-        if (res.ok) {
-            document.getElementById("settingName").innerText = data.name;
-            document.getElementById("settingEmail").innerText = data.email;
-        }
-
-    } catch (error) {
-        console.error("Error loading settings:", error);
+        document.getElementById("settingName").innerText =
+          data.name || "—";
+      } else {
+        document.getElementById("settingName").innerText = "—";
+      }
+    } catch (err) {
+      console.warn("Backend name fetch failed");
+      document.getElementById("settingName").innerText = "—";
     }
+  }
 }
 
-// Update name + email
-document.getElementById("changePasswordBtn").addEventListener("click", async () => {
-    const oldPw = prompt("Enter your current password:");
-    if (!oldPw) return;
+/* =========================
+   CHANGE PASSWORD
+   ========================= */
 
-    const newPw = prompt("Enter your new password:");
-    if (!newPw) return;
+document
+  .getElementById("changePasswordBtn")
+  .addEventListener("click", async () => {
+    const newPassword = prompt("Enter your new password:");
+    if (!newPassword) return;
 
-    const res = await fetch("http://127.0.0.1:8000/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            user_id: USER_ID,
-            old_password: oldPw,
-            new_password: newPw
-        })
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
-        alert("Password changed successfully!");
-    } else {
-        alert("Error: " + data.detail);
+    if (error) {
+      alert(error.message);
+      return;
     }
-});
 
+    alert("Password updated successfully!");
+  });
 
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.clear();
+/* =========================
+   LOGOUT
+   ========================= */
+
+document
+  .getElementById("logoutBtn")
+  .addEventListener("click", async () => {
+    await supabase.auth.signOut();
     window.location.href = "login.html";
-});
+  });
+
+/* =========================
+   INIT
+   ========================= */
 
 loadSettings();

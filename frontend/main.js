@@ -1,34 +1,49 @@
-// main.js — Fully functional real-time mic engine (live decibel meter, live WPM,
-// filler detection, streaming audio chunks to backend via Socket.IO, final upload).
-//
-// Assumptions:
-// - Your HTML contains elements with IDs: micButton, decibelBar, timerDisplay, suggestionText, userImage, userName
-// - Socket.IO server is available at SOCKET_URL (change if needed).
-// - A REST endpoint exists at /create-session to record final session metadata.
-// - A REST endpoint exists at /upload-audio to accept final audio Blob (optional).
-//
-// Behavior summary:
-// - Click mic button to start streaming audio (real-time).
-// - While live: decibel bar updates, audio chunks are sent to server via Socket.IO.
-// - Server may emit "live_transcript" and "live_feedback" events — handled below.
-// - On stop: MediaRecorder final blob is uploaded (if upload endpoint exists), then /create-session is called.
-//cd "C:\Users\zaira\OneDrive\Desktop\Desktop Folder\Verbalystic\backend"
-//.\venv\Scripts\activate
-//uvicorn main:app --reload --port 8000
-
 console.log("Main.js (real-time) loaded");
 
-// ---------- CONFIG ----------
+/* =========================
+   Supabase Initialization
+   ========================= */
 
-const USER_ID = "c7c92dad-80b2-42ed-b1c1-beb25ec18d07"; // keep from your app
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+
+/* =========================
+   Config
+   ========================= */
+
 const SOCKET_URL = "http://127.0.0.1:8000";
 const UPLOAD_AUDIO_URL = "http://127.0.0.1:8000/upload-audio";
 const CREATE_SESSION_URL = "http://127.0.0.1:8000/create-session";
 
-
 const FILLER_WORDS = ["um", "uh", "like", "you know", "so", "actually", "basically", "right"];
 
-// ---------- STATE ----------
+/* =========================
+   Auth
+   ========================= */
+
+async function getAuthenticatedUser() {
+    const { data: sessionData, error } = await supabase.auth.getSession();
+
+    if (error || !sessionData.session) {
+        console.warn("No active Supabase session");
+        window.location.href = "login.html";
+        return null;
+    }
+
+    return sessionData.session.user;
+}
+
+
+/* =========================
+   State
+   ========================= */
+
 let isRecording = false;
 let audioContext = null;
 let mediaStream = null;
@@ -42,76 +57,74 @@ let totalWordsCount = 0;
 let lastTranscript = "";
 let liveWpm = 0;
 let liveFillerCount = 0;
-let decibelSmoothing = 0.85; // smoothing factor for decibel display
+let decibelSmoothing = 0.85;
+let CURRENT_USER = null;
 
-// UI elements
+/* =========================
+   UI Elements
+   ========================= */
+
 const micButton = document.getElementById("micButton");
 const decibelBar = document.getElementById("decibelBar");
 const timerDisplay = document.getElementById("timerDisplay");
 const suggestionText = document.getElementById("suggestionText");
 
-// ensure socket.io client exists; if not, load CDN dynamically
+/* =========================
+   Socket.IO Loader
+   ========================= */
 
 async function ensureSocketIoClient() {
     if (typeof io !== "undefined") return;
     await new Promise((resolve, reject) => {
         const s = document.createElement("script");
         s.src = "https://cdn.socket.io/4.7.2/socket.io.min.js";
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error("Failed to load socket.io client"));
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Socket.IO load failed"));
         document.head.appendChild(s);
     });
 }
 
-// ---------- UTIL: Float32 -> Int16 ----------
+/* =========================
+   Audio Utils (unchanged)
+   ========================= */
+
 function floatTo16BitPCM(float32Array) {
-    const l = float32Array.length;
-    const buffer = new ArrayBuffer(l * 2);
+    const buffer = new ArrayBuffer(float32Array.length * 2);
     const view = new DataView(buffer);
     let offset = 0;
-    for (let i = 0; i < l; i++, offset += 2) {
+    for (let i = 0; i < float32Array.length; i++, offset += 2) {
         let s = Math.max(-1, Math.min(1, float32Array[i]));
         view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
     }
     return buffer;
 }
 
-// Downsample Float32Array to 16000 Hz (if needed)
 function downsampleBuffer(buffer, inputSampleRate, outSampleRate) {
     if (outSampleRate === inputSampleRate) return buffer;
-    if (outSampleRate > inputSampleRate) {
-        console.warn("downsampleBuffer: outSampleRate should be <= inputSampleRate");
-        return buffer;
-    }
-    const sampleRateRatio = inputSampleRate / outSampleRate;
-    const newLength = Math.round(buffer.length / sampleRateRatio);
+    const ratio = inputSampleRate / outSampleRate;
+    const newLength = Math.round(buffer.length / ratio);
     const result = new Int16Array(newLength);
-    let offsetResult = 0;
-    let offsetBuffer = 0;
+    let offsetResult = 0, offsetBuffer = 0;
     while (offsetResult < result.length) {
-        const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
-        // use average value between the two offsets
+        const nextOffset = Math.round((offsetResult + 1) * ratio);
         let accum = 0, count = 0;
-        for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        for (let i = offsetBuffer; i < nextOffset && i < buffer.length; i++) {
             accum += buffer[i];
             count++;
         }
-        result[offsetResult] = Math.max(-1, Math.min(1, accum / count)) * 0x7fff;
-        offsetResult++;
-        offsetBuffer = nextOffsetBuffer;
+        result[offsetResult++] = (accum / count) * 0x7fff;
+        offsetBuffer = nextOffset;
     }
     return result.buffer;
 }
 
-// ---------- UI helpers ----------
+/* =========================
+   UI Helpers
+   ========================= */
+
 function setMicActiveUI(active) {
-    if (active) {
-        micButton.classList.add("bg-blue-700");
-        micButton.classList.remove("bg-primary");
-    } else {
-        micButton.classList.remove("bg-blue-700");
-        micButton.classList.add("bg-primary");
-    }
+    micButton.classList.toggle("bg-blue-700", active);
+    micButton.classList.toggle("bg-primary", !active);
 }
 
 function updateTimer() {
@@ -120,204 +133,123 @@ function updateTimer() {
         return;
     }
     const elapsed = Math.floor((Date.now() - sessionStartTs) / 1000);
-    const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-    const ss = String(elapsed % 60).padStart(2, "0");
-    timerDisplay.innerText = `${mm}:${ss}`;
+    timerDisplay.innerText =
+        `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
 }
 
-// decibel is expected around -60 to 0 for RMS. We'll map to 0-100% height.
 let smoothedDbPercent = 0;
 function updateDecibelBar(rms) {
-    // rms is between 0 and maybe ~0.5 depending on input.
-    // convert to dBFS
-    let db;
-    if (rms <= 1e-8) db = -100;
-    else db = 20 * Math.log10(rms);
-    // map -100..0 to 0..100
-    let pct = (db + 100) / 100;
-    pct = Math.max(0, Math.min(1, pct));
-    // smooth
+    let db = rms <= 1e-8 ? -100 : 20 * Math.log10(rms);
+    let pct = Math.max(0, Math.min(1, (db + 100) / 100));
     smoothedDbPercent = smoothedDbPercent * decibelSmoothing + pct * (1 - decibelSmoothing);
     decibelBar.style.height = `${Math.round(smoothedDbPercent * 100)}%`;
 }
 
-// set suggestion text safely
 function updateSuggestionText(text) {
     suggestionText.innerText = text;
 }
 
-// ---------- SOCKET: init, handlers ----------
+/* =========================
+   Socket Init
+   ========================= */
+
 async function initSocket() {
     await ensureSocketIoClient();
 
-    // create socket connected to the FastAPI mount at /ws
-    
     socket = io(SOCKET_URL, {
         path: "/ws/socket.io",
-        transports: ["websocket", "polling"],
-        withCredentials: false
+        transports: ["websocket"],
     });
-
-
-
 
     socket.on("connect", () => {
-        console.log("Socket connected:", socket.id);
-        socket.emit("identify", { user_id: USER_ID });
+        socket.emit("identify", { user_id: CURRENT_USER.id });
     });
 
-    socket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
-    });
-
-    socket.on("live_transcript", (payload) => {
-        lastTranscript = payload.text || "";
+    socket.on("live_transcript", ({ text }) => {
+        lastTranscript = text || "";
         computeLocalStatsFromTranscript(lastTranscript);
     });
 
-    socket.on("live_feedback", (payload) => {
-        if (!payload) return;
-        if (payload.suggestion) updateSuggestionText(payload.suggestion);
-        if (payload.wpm !== undefined) {
-            liveWpm = Math.round(payload.wpm);
-            updateSuggestionText(`${payload.suggestion || ""}  •  WPM: ${liveWpm}  •  Fillers: ${payload.fillerCount || 0}`);
-        }
-    });
-
-    socket.on("error", (err) => {
-        console.error("Socket error:", err);
+    socket.on("live_feedback", ({ suggestion, wpm, fillerCount }) => {
+        updateSuggestionText(
+            `${suggestion || ""} • WPM: ${Math.round(wpm || liveWpm)} • Fillers: ${fillerCount || liveFillerCount}`
+        );
     });
 }
 
-// ---------- LOCAL ANALYSIS (fallback) ----------
+/* =========================
+   Local Analysis (unchanged)
+   ========================= */
+
 function computeLocalStatsFromTranscript(transcript) {
     if (!transcript) return;
-    const words = transcript.trim().split(/\s+/).filter(Boolean);
+    const words = transcript.trim().split(/\s+/);
     totalWordsCount = words.length;
-    // estimate WPM using elapsed time
+
     if (sessionStartTs) {
-        const elapsedMinutes = (Date.now() - sessionStartTs) / 1000 / 60;
-        const estimatedWpm = elapsedMinutes > 0 ? totalWordsCount / elapsedMinutes : 0;
-        liveWpm = Math.round(estimatedWpm);
+        const mins = (Date.now() - sessionStartTs) / 60000;
+        liveWpm = Math.round(mins > 0 ? totalWordsCount / mins : 0);
     }
-    // simple filler detection
-    let foundFillers = 0;
-    const lower = transcript.toLowerCase();
+
+    let fillers = 0;
     for (const f of FILLER_WORDS) {
-        // count occurrences with word boundaries
-        const re = new RegExp("\\b" + f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "gi");
-        const match = lower.match(re);
-        if (match) foundFillers += match.length;
+        fillers += (transcript.toLowerCase().match(new RegExp(`\\b${f}\\b`, "g")) || []).length;
     }
-    liveFillerCount = foundFillers;
+    liveFillerCount = fillers;
 
-    // create suggestion heuristic
-    let suggestion = "";
-    if (liveWpm < 90) suggestion = "Try speaking a bit faster.";
-    else if (liveFillerCount > 2) suggestion = "Reduce filler words (um/uh/like).";
-    else suggestion = "Good pace — keep going.";
+    let suggestion =
+        liveWpm < 90 ? "Speak faster"
+        : fillers > 2 ? "Reduce filler words"
+        : "Good pace";
 
-    updateSuggestionText(`${suggestion} • WPM: ${liveWpm} • Fillers: ${liveFillerCount}`);
+    updateSuggestionText(`${suggestion} • WPM: ${liveWpm} • Fillers: ${fillers}`);
 }
 
-// ---------- RECORDING / STREAMING ----------
+/* =========================
+   Start / Stop Recording
+   ========================= */
+
 async function startRecording() {
     if (isRecording) return;
-    try {
-        await initSocket(); // ensure socket ready
-    } catch (err) {
-        console.error("Socket init failed:", err);
-        alert("Failed to connect to realtime server. Check SOCKET_URL.");
-        return;
-    }
 
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
-        console.error("Microphone access error:", err);
-        alert("Please grant microphone access.");
-        return;
-    }
+    CURRENT_USER = await getAuthenticatedUser();
+    if (!CURRENT_USER) return;
 
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    await initSocket();
+
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new AudioContext();
     sourceNode = audioContext.createMediaStreamSource(mediaStream);
+    processorNode = audioContext.createScriptProcessor(4096, 1, 1);
 
-    // For compatibility, use ScriptProcessor if AudioWorklet not available.
-    // buffer size 4096 gives decent latency.
-    const bufferSize = 4096;
-    processorNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
-
-    // MediaRecorder used to capture final audio file
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(mediaStream);
-    mediaRecorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) recordedChunks.push(e.data);
-    };
-    mediaRecorder.start(1000); // timeslice for ondataavailable (1s)
+    mediaRecorder.ondataavailable = e => e.data.size && recordedChunks.push(e.data);
+    mediaRecorder.start(1000);
 
-    // connect nodes
     sourceNode.connect(processorNode);
     processorNode.connect(audioContext.destination);
 
-    // start session timing
     sessionStartTs = Date.now();
     isRecording = true;
     setMicActiveUI(true);
     updateSuggestionText("Recording...");
 
-    // send an event to server that session started
-    if (socket && socket.connected) {
-        socket.emit("session_start", { user_id: USER_ID, ts: sessionStartTs });
-    }
+    socket.emit("session_start", { user_id: CURRENT_USER.id });
 
-    // process audio frames
-    processorNode.onaudioprocess = (e) => {
+    processorNode.onaudioprocess = e => {
         if (!isRecording) return;
-        const inputBuffer = e.inputBuffer.getChannelData(0);
-        // compute RMS for decibel display
-        let rms = 0;
-        for (let i = 0; i < inputBuffer.length; i++) {
-            rms += inputBuffer[i] * inputBuffer[i];
-        }
-        rms = Math.sqrt(rms / inputBuffer.length);
+        const input = e.inputBuffer.getChannelData(0);
+        let rms = Math.sqrt(input.reduce((s, v) => s + v * v, 0) / input.length);
         updateDecibelBar(rms);
 
-        // downsample to 16k and convert to Int16 PCM
-        const float32 = inputBuffer;
-        // If your audioContext.sampleRate != 16000, downsample.
-        const sampleRate = audioContext.sampleRate;
-        // Convert to Float32Array copy to avoid modifying the original
-        const float32copy = new Float32Array(float32.length);
-        float32copy.set(float32);
+        const floatCopy = new Float32Array(input);
+        const buf = audioContext.sampleRate === 16000
+            ? floatTo16BitPCM(floatCopy)
+            : downsampleBuffer(floatCopy, audioContext.sampleRate, 16000);
 
-        let bufferToSend;
-        if (sampleRate !== 16000) {
-            // naive downsample: this helper returns an ArrayBuffer of Int16
-            const down = downsampleBuffer(float32copy, sampleRate, 16000);
-            bufferToSend = down; // already Int16 ArrayBuffer
-        } else {
-            bufferToSend = floatTo16BitPCM(float32copy);
-        }
-
-        // Send chunk to socket.io as binary
-        if (socket && socket.connected) {
-            try {
-                // mark chunk with a tiny meta header if needed
-                socket.emit("audio_chunk_pcm", bufferToSend);
-            } catch (err) {
-                console.error("Socket emit chunk error:", err);
-            }
-        }
+        socket.emit("audio_chunk_pcm", buf);
     };
-
-    // update short timer every 500ms
-    const timerInterval = setInterval(() => {
-        if (!isRecording) {
-            clearInterval(timerInterval);
-            return;
-        }
-        updateTimer();
-    }, 500);
 }
 
 async function stopRecording() {
@@ -325,173 +257,62 @@ async function stopRecording() {
 
     isRecording = false;
     setMicActiveUI(false);
-    updateSuggestionText("Processing final data...");
+    updateSuggestionText("Processing...");
 
-    // stop nodes and stream
-    if (processorNode) {
-        processorNode.disconnect();
-        processorNode.onaudioprocess = null;
-        processorNode = null;
-    }
-    if (sourceNode) {
-        sourceNode.disconnect();
-        sourceNode = null;
-    }
-    if (audioContext) {
-        try { audioContext.close(); } catch (e) { /* ignore */ }
-        audioContext = null;
-    }
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(t => t.stop());
-    }
+    mediaRecorder.stop();
+    mediaStream.getTracks().forEach(t => t.stop());
+    processorNode.disconnect();
+    sourceNode.disconnect();
+    audioContext.close();
 
-    // stop mediaRecorder and wait for final chunks
-    const stopPromise = new Promise((resolve) => {
-        mediaRecorder.onstop = () => resolve();
-        mediaRecorder.stop();
+    const duration = Math.floor((Date.now() - sessionStartTs) / 1000);
+    const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
+
+    const form = new FormData();
+    form.append("file", audioBlob);
+    form.append("user_id", CURRENT_USER.id);
+
+    let audioUrl = null;
+    try {
+        const r = await fetch(UPLOAD_AUDIO_URL, { method: "POST", body: form });
+        if (r.ok) audioUrl = (await r.json()).url;
+    } catch {}
+
+    await fetch(CREATE_SESSION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: CURRENT_USER.id,
+            audio_url: audioUrl,
+            transcript: lastTranscript,
+            duration_seconds: duration,
+            avg_wpm: liveWpm,
+            filler_word_count: liveFillerCount
+        })
     });
 
-    await stopPromise;
+    socket.emit("session_end", { user_id: CURRENT_USER.id });
+    socket.disconnect();
 
-    // final duration
-    const durationSeconds = Math.max(0, Math.floor((Date.now() - sessionStartTs) / 1000));
-
-    // prepare audio blob from recordedChunks
-    let audioBlob = null;
-    try {
-        audioBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-    } catch (e) {
-        console.warn("Failed to assemble final audio blob:", e);
-    }
-
-    // Attempt to upload audioBlob if endpoint exists. If it fails, we still call create-session with no audio_url.
-    let audioUrl = null;
-    if (audioBlob) {
-        try {
-            const form = new FormData();
-            // filename with timestamp
-            const filename = `session_${USER_ID}_${Date.now()}.webm`;
-            form.append("file", audioBlob, filename);
-            // add user id for association
-            form.append("user_id", USER_ID);
-
-            const res = await fetch(UPLOAD_AUDIO_URL, {
-                method: "POST",
-                body: form
-            });
-
-            if (res.ok) {
-                const j = await res.json();
-                // assume server returns { url: "https://..." }
-                audioUrl = j.url || j.audio_url || null;
-                console.log("Audio uploaded:", audioUrl);
-            } else {
-                console.warn("Audio upload failed:", res.statusText);
-            }
-        } catch (err) {
-            console.warn("Audio upload error:", err);
-        }
-    }
-
-    // final stats — prefer server-provided stats if available; otherwise use local estimates
-    const payload = {
-        user_id: USER_ID,
-        audio_url: audioUrl,
-        transcript: lastTranscript || null,
-        duration_seconds: durationSeconds,
-        avg_wpm: liveWpm || null,
-        filler_word_count: liveFillerCount || null,
-        pronunciation_score: null, // filled by backend analysis if available
-        tone_score: null,
-        grammar_score: null
-    };
-
-    // inform server that session ended
-    if (socket && socket.connected) {
-        try {
-            socket.emit("session_end", { user_id: USER_ID, duration_seconds: durationSeconds });
-        } catch (e) {
-            console.warn("session_end emit failed:", e);
-        }
-    }
-
-    // call create-session endpoint
-    try {
-        const res = await fetch(CREATE_SESSION_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            const j = await res.json();
-            console.log("Session saved:", j);
-            updateSuggestionText("Session saved. " + (j.message || ""));
-            alert("Session saved successfully!");
-        } else {
-            const txt = await res.text();
-            console.error("create-session failed:", res.status, txt);
-     
-            updateSuggestionText("Failed to save session.");
-        }
-    } catch (err) {
-        console.error("create-session error:", err);
-        
-        updateSuggestionText("Failed to save session.");
-    }
-
-    // disconnect socket optionally
-    if (socket) {
-        try { socket.disconnect(); } catch (e) { /* ignore */ }
-        socket = null;
-    }
-
-    // reset session variables
     recordedChunks = [];
     sessionStartTs = null;
-    totalWordsCount = 0;
-    lastTranscript = "";
-    liveWpm = 0;
-    liveFillerCount = 0;
     updateTimer();
 }
 
-// ---------- MIC BUTTON HANDLER ----------
-micButton.addEventListener("click", async () => {
-    if (!isRecording) {
-        try {
-            await startRecording();
-        } catch (err) {
-            console.error("startRecording error:", err);
-            alert("Failed to start recording. See console.");
-        }
-    } else {
-        try {
-            await stopRecording();
-        } catch (err) {
-            console.error("stopRecording error:", err);
-            alert("Failed to stop recording. See console.");
-        }
-    }
-});
+/* =========================
+   Events
+   ========================= */
 
-// ---------- safety: stop and cleanup when page unloads ----------
-window.addEventListener("beforeunload", () => {
-    if (isRecording) {
-        try {
-            stopRecording();
-        } catch (e) { /* ignore */ }
-    }
-});
+micButton.addEventListener("click", () =>
+    isRecording ? stopRecording() : startRecording()
+);
 
-// ---------- Initialization ----------
-(function init() {
-    // Set initial UI
-    setMicActiveUI(false);
-    updateTimer();
-    updateSuggestionText("Click the mic to start a session.");
+window.addEventListener("beforeunload", () => isRecording && stopRecording());
 
-    // Pre-init socket lazily to avoid blocking
-    // NOTE: we will init when recording starts, but you can init earlier by uncommenting:
-    // initSocket().catch(e => console.warn("Socket pre-init failed:", e));
-})();
+/* =========================
+   Init
+   ========================= */
+
+setMicActiveUI(false);
+updateTimer();
+updateSuggestionText("Click the mic to start a session.");

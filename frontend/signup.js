@@ -1,14 +1,26 @@
-btn.addEventListener("click", async (e) => {
+console.log("signup.js loaded");
+
+// Supabase init
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+const form = document.getElementById("signupForm");
+
+form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("Signup button clicked");
 
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    const confirmPassword = document.querySelector("input[placeholder='Confirm your password']").value.trim();
+    const name = form.elements["name"].value.trim();
+    const email = form.elements["email"].value.trim().toLowerCase();
+    const password = form.elements["password"].value.trim();
+    const confirmPassword = form.elements["confirmPassword"].value.trim();
 
-    if (!name || !email || !password) {
-        alert("Enter name, email, and password");
+    if (!name || !email || !password || !confirmPassword) {
+        alert("All fields are required");
         return;
     }
 
@@ -17,29 +29,34 @@ btn.addEventListener("click", async (e) => {
         return;
     }
 
-    const payload = { name, email, password };
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+    });
 
-    try {
-        console.log("Sending request...");
-        const res = await fetch("http://127.0.0.1:8000/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+    if (error) {
+        alert(error.message);
+        return;
+}
+
+    const user = data.user;
+
+    // INSERT INTO users table
+    const { error: insertError } = await supabase
+        .from("users")
+        .insert({
+            id: user.id,
+            email: user.email,
+            name: name
         });
 
-        console.log("Response received");
-
-        const data = await res.json();
-        console.log("Backend Response:", data);
-
-        if (res.ok) {
-            alert("Signup success: " + data.user_id);
-        } else {
-            alert("Error: " + data.detail);
-        }
-
-    } catch (err) {
-        console.error("Request failed:", err);
-        alert("Could not reach backend.");
+    if (insertError) {
+        alert("User created but profile not saved");
+        console.error(insertError);
+        return;
     }
+
+    alert("Signup successful!");
+    window.location.href = "main.html";
+
 });
