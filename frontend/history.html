@@ -2,100 +2,134 @@
 <html lang="en" class="light">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History – Verbalystic</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History – VERBALYSTIC</title>
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-    <style>
-        body {
-            font-family: "Inter", sans-serif;
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#359EFF",
+            "background-light": "#f5f7f8"
+          },
+          fontFamily: {
+            display: "Inter"
+          }
         }
+      }
+    };
+  </script>
 
-        .material-symbols-outlined {
-            font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
-        }
-    </style>
+  <style>
+    body { font-family: "Inter", sans-serif; }
+    .material-icons-outlined { font-size: 20px; }
+  </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<body class="bg-background-light text-gray-800">
 
-    <div class="flex min-h-screen">
+<div class="flex min-h-screen">
 
-        <!-- SIDEBAR -->
-        <aside class="w-64 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+  <!-- SIDEBAR (LOCKED VERSION) -->
+  <aside class="w-64 bg-white p-6 flex flex-col justify-between rounded-r-2xl">
 
-            <div class="flex items-center gap-3 mb-6">
-                <div id="sidebarUserImage" class="size-10 rounded-full bg-cover bg-center bg-gray-300"></div>
-                <div>
-                    <p id="sidebarUserName" class="font-semibold text-gray-900 dark:text-gray-100">User</p>
-                </div>
-            </div>
+    <!-- TOP -->
+    <div>
+      <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary w-9 h-9 rounded-lg"></div>
+          <h1 class="text-xl font-bold text-gray-900">Verbalystic</h1>
+        </div>
+      </div>
 
-            <nav class="flex flex-col gap-2 text-sm font-medium">
+      <!-- NAV -->
+      <nav class="flex flex-col space-y-2">
 
-                <a href="main.html"
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    New Session
-                </a>
+        <a href="main.html"
+           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">add_circle_outline</span>
+          <span class="font-medium">New Session</span>
+        </a>
 
-                <a href="history.html"
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary">
-                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">history</span>
-                    History
-                </a>
+        <!-- ACTIVE -->
+        <a href="history.html"
+           class="flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-100 text-gray-900">
+          <span class="material-icons-outlined">history</span>
+          <span class="font-medium">History</span>
+        </a>
 
-                <a href="report.html"
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <span class="material-symbols-outlined">bar_chart</span>
-                    Report
-                </a>
+        <a href="report.html"
+           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">bar_chart</span>
+          <span class="font-medium">Report</span>
+        </a>
 
-                <a href="profile.html"
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <span class="material-symbols-outlined">person</span>
-                    Profile
-                </a>
+        <a href="profile.html"
+           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">person_outline</span>
+          <span class="font-medium">Profile</span>
+        </a>
 
-                <a href="setting.html"
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <span class="material-symbols-outlined">settings</span>
-                    Settings
-                </a>
-            </nav>
+        <a href="setting.html"
+           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">settings</span>
+          <span class="font-medium">Settings</span>
+        </a>
 
-            <button id="logoutBtn"
-                class="mt-auto flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
-                <span class="material-symbols-outlined">logout</span> Logout
-            </button>
+      </nav>
+    </div>
 
-        </aside>
+    <!-- BOTTOM -->
+    <div class="flex flex-col space-y-2">
 
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 p-8 overflow-y-auto">
+      <div class="flex items-center gap-3 px-4 py-2">
+        <img id="sidebarUserImage"
+             class="w-9 h-9 rounded-full object-cover"
+             src="https://placehold.co/40" />
+        <p id="sidebarUserName"
+           class="font-semibold text-sm text-gray-900">User</p>
+      </div>
 
-            <div class="max-w-5xl mx-auto">
-
-                <h1 class="text-3xl font-bold mb-4">Session History</h1>
-                <p class="text-gray-600 dark:text-gray-400 mb-6">A list of all your recorded speaking sessions.</p>
-
-                <!-- SESSION LIST -->
-                <div id="historyList" class="space-y-4">
-                    <!-- JS will dynamically insert sessions -->
-                </div>
-
-            </div>
-
-        </main>
+      <a id="logoutBtn"
+         class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 cursor-pointer">
+        <span class="material-icons-outlined">logout</span>
+        <span class="font-medium">Logout</span>
+      </a>
 
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="history.js"></script>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 p-8 overflow-y-auto">
+
+    <div class="max-w-5xl mx-auto">
+
+      <h1 class="text-3xl font-bold mb-2">Session History</h1>
+      <p class="text-gray-600 mb-6">
+        A list of all your recorded speaking sessions.
+      </p>
+
+      <!-- SESSION LIST -->
+      <div id="historyList" class="space-y-4">
+        <!-- JS will inject sessions here -->
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="history.js"></script>
 
 </body>
-
 </html>

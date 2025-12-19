@@ -2,226 +2,200 @@
 <html lang="en" class="light">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verbalystic – Report</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Report – VERBALYSTIC</title>
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
-    <style>
-        body {
-            font-family: "Inter", sans-serif;
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#359EFF",
+            "background-light": "#f5f7f8"
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"]
+          }
         }
+      }
+    };
+  </script>
 
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-    </style>
+  <style>
+    body { font-family: Inter, sans-serif; }
+    .material-icons-outlined { font-size: 20px; }
+  </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display">
+<body class="bg-background-light text-gray-800">
+<div class="flex min-h-screen">
 
-    <div class="flex min-h-screen w-full">
+  <!-- SIDEBAR (IDENTICAL TO MAIN) -->
+  <aside class="w-64 bg-white p-6 flex flex-col justify-between rounded-r-2xl">
 
-        <!-- SIDEBAR -->
-        <aside class="hidden lg:flex h-screen w-64 shrink-0 flex-col bg-white dark:bg-gray-800 p-4 shadow">
+    <!-- TOP -->
+    <div>
+      <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary w-9 h-9 rounded-lg"></div>
+          <h1 class="text-xl font-bold text-gray-900">Verbalystic</h1>
+        </div>
+      </div>
 
-            <!-- LOGO -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">Verbalystic</h2>
-            </div>
+      <!-- NAV -->
+      <nav class="flex flex-col space-y-2">
 
-            <!-- NAVIGATION -->
-            <nav class="mt-6 flex flex-col gap-2 text-sm font-medium">
+        <a href="main.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">add_circle_outline</span>
+          <span class="font-medium">New Session</span>
+        </a>
 
-                <a href="main.html"
-                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    New Session
-                </a>
+        <a href="history.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">history</span>
+          <span class="font-medium">History</span>
+        </a>
 
-                <a href="history.html"
-                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                    <span class="material-symbols-outlined">history</span>
-                    History
-                </a>
+        <!-- ACTIVE -->
+        <a href="report.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-100 text-gray-900">
+          <span class="material-icons-outlined">bar_chart</span>
+          <span class="font-medium">Report</span>
+        </a>
 
-                <a href="report.html"
-                    class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-md">
-                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">analytics</span>
-                    Report
-                </a>
+        <a href="profile.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">person_outline</span>
+          <span class="font-medium">Profile</span>
+        </a>
 
-                <a href="profile.html"
-                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                    <span class="material-symbols-outlined">person</span>
-                    Profile
-                </a>
+        <a href="setting.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">settings</span>
+          <span class="font-medium">Settings</span>
+        </a>
 
-                <a href="setting.html"
-                    class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                    <span class="material-symbols-outlined">settings</span>
-                    Settings
-                </a>
+      </nav>
+    </div>
 
-            </nav>
+    <!-- BOTTOM -->
+    <div class="flex flex-col space-y-2">
 
-            <!-- USER SECTION -->
-            <div class="mt-auto border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div class="flex items-center gap-3 px-4 py-2">
+        <img id="sidebarUserImage"
+             class="w-9 h-9 rounded-full object-cover"
+             src="https://placehold.co/40" />
+        <p id="sidebarUserName"
+           class="font-semibold text-sm text-gray-900">User</p>
+      </div>
 
-                <div class="flex items-center gap-3 px-2">
-                    <img id="sidebarUserImage" class="h-10 w-10 rounded-full object-cover"
-                        src="https://via.placeholder.com/100" />
-                    <p id="sidebarUserName" class="text-sm font-semibold text-gray-800 dark:text-gray-200">User</p>
-                </div>
-
-                <button id="logoutBtn"
-                    class="mt-3 flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md w-full text-left">
-                    <span class="material-symbols-outlined">logout</span>
-                    Logout
-                </button>
-
-            </div>
-        </aside>
-
-        <!-- MAIN REPORT CONTENT -->
-        <main class="flex-1 p-8 overflow-y-auto">
-
-            <div class="mx-auto max-w-7xl">
-
-                <!-- HEADER -->
-                <div class="mb-6">
-                    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">Your Performance Report</h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400 text-lg">
-                        A detailed breakdown of your latest speaking session.
-                    </p>
-                </div>
-
-                <!-- SESSION STATS + SCORES -->
-                <div id="sessionStats"
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Speaking Speed (WPM)</h3>
-                        <p id="avgWPM" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                    </div>
-
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Filler Words</h3>
-                        <p id="fillerWordCount" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                    </div>
-
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Pronunciation Score</h3>
-                        <p id="pronScore" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                    </div>
-
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <h3 class="text-sm text-gray-500 dark:text-gray-400">Tone Score</h3>
-                        <p id="toneScore" class="text-2xl font-bold text-gray-900 dark:text-gray-100">0</p>
-                    </div>
-
-                </div>
-
-                <!-- AI ANALYSIS SECTION -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-
-                    <!-- Raw Transcript -->
-                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Your Transcript</h2>
-                        <div id="rawTranscript"
-                            class="mt-4 h-64 overflow-y-auto text-sm text-gray-700 dark:text-gray-300 border rounded-lg p-4 space-y-2">
-                            <!-- Insert from JS -->
-                        </div>
-                    </div>
-
-                    <!-- AI Improved Transcript -->
-                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow">
-                        <h2 class="text-lg font-semibold text-primary">AI-Improved Version</h2>
-                        <div id="improvedTranscript"
-                            class="mt-4 h-64 overflow-y-auto text-sm text-gray-700 dark:text-gray-300 border rounded-lg p-4 space-y-2">
-                            <!-- Insert from JS -->
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- GRAMMAR & VOCAB TABLE -->
-                <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow mb-8">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Grammar & Vocabulary Report</h2>
-
-                    <div class="mt-4">
-                        <p class="text-gray-600 dark:text-gray-400 mb-2">Detected errors & improvements</p>
-
-                        <table class="min-w-full border divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
-                                <tr class="text-left text-gray-700 dark:text-gray-200 font-medium">
-                                    <th class="p-3">Issue</th>
-                                    <th class="p-3">Suggestion</th>
-                                    <th class="p-3">Errors</th>
-                                </tr>
-                            </thead>
-                            <tbody id="grammarTable"
-                                class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-300">
-                                <!-- JS will populate -->
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-
-                <!-- EXTRA ANALYSIS CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-
-                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
-                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Clarity Score</h3>
-                        <p id="clarityScore" class="text-3xl font-bold text-primary mt-2">0</p>
-                    </div>
-
-                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
-                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Fluency Score</h3>
-                        <p id="fluencyScore" class="text-3xl font-bold text-primary mt-2">0</p>
-                    </div>
-
-                    <div class="rounded-xl border bg-white dark:bg-gray-800 p-6 shadow text-center">
-                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Vocabulary Score</h3>
-                        <p id="vocabScore" class="text-3xl font-bold text-primary mt-2">0</p>
-                    </div>
-
-                </div>
-
-                <!-- TIPS & EXERCISES -->
-                <div class="mb-12">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Tips & Exercises</h2>
-
-                    <div id="tipsContainer"
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                        <!-- JS will insert exercise cards -->
-
-                    </div>
-                </div>
-
-                <!-- SHARE BUTTON -->
-                <div class="flex justify-end mb-10">
-                    <button
-                        class="flex items-center gap-2 rounded-full border-2 border-primary px-6 py-3 text-primary font-semibold hover:bg-primary/10">
-                        <span class="material-symbols-outlined">share</span>
-                        Share Progress
-                    </button>
-                </div>
-
-            </div>
-
-        </main>
+      <a id="logoutBtn"
+        class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 cursor-pointer">
+        <span class="material-icons-outlined">logout</span>
+        <span class="font-medium">Logout</span>
+      </a>
 
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="report.js"></script>
+  </aside>
+
+  <!-- MAIN CONTENT (UNCHANGED DESIGN) -->
+  <main class="flex-1 p-8 overflow-y-auto">
+
+    <!-- HEADER -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-black tracking-tight">Your Performance Report</h1>
+      <p class="text-gray-500 mt-2 text-lg">
+        Here's a detailed breakdown of your latest session.
+      </p>
+    </div>
+
+    <!-- PERFORMANCE CHART -->
+    <div class="bg-white rounded-xl p-6 mb-8 shadow-sm">
+      <h2 class="text-lg font-semibold">Overall Performance Trends</h2>
+      <p class="text-sm text-gray-500">
+        Comparison of key metrics over the last 7 sessions
+      </p>
+
+      <div class="mt-6 h-[300px]">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAMMAR + RANK -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+      <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold mb-4">Grammar Errors</h3>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-gray-500 border-b">
+              <th class="py-2">Incorrect Phrase</th>
+              <th class="py-2">Suggested Correction</th>
+              <th class="py-2">Count</th>
+            </tr>
+          </thead>
+          <tbody id="grammarTable"></tbody>
+        </table>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 text-center shadow-sm">
+        <h3 class="text-lg font-semibold">Rank & Streak</h3>
+        <p class="mt-4 text-orange-500 font-bold" id="streakCount">0 Day Streak</p>
+      </div>
+    </div>
+
+    <!-- TRANSCRIPTS -->
+    <div class="bg-white rounded-xl p-6 mb-8 shadow-sm">
+      <h3 class="text-lg font-semibold mb-4">Speech Transcript Analysis</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="font-semibold text-gray-500 mb-2">Your Speech Transcript</h4>
+          <div id="rawTranscript"
+               class="h-64 overflow-y-auto border rounded-lg p-4 text-sm"></div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-primary mb-2">AI-Improved Version</h4>
+          <div id="improvedTranscript"
+               class="h-64 overflow-y-auto border border-primary/40 rounded-lg p-4 text-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="mb-12">
+      <h3 class="text-lg font-semibold mb-4">Tips & Exercises</h3>
+      <div id="tipsContainer"
+           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <!-- SHARE -->
+    <div class="flex justify-end">
+      <button class="flex items-center gap-2 border-2 border-primary text-primary px-6 py-3 rounded-full hover:bg-primary/10">
+        <span class="material-icons-outlined">share</span>
+        Share Progress
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="report.js"></script>
 
 </body>
-
 </html>

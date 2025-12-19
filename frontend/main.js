@@ -59,6 +59,7 @@ let liveWpm = 0;
 let liveFillerCount = 0;
 let decibelSmoothing = 0.85;
 let CURRENT_USER = null;
+let timerInterval = null;
 
 /* =========================
    UI Elements
@@ -135,6 +136,18 @@ function updateTimer() {
     const elapsed = Math.floor((Date.now() - sessionStartTs) / 1000);
     timerDisplay.innerText =
         `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
+}
+function startTimerLoop() {
+    stopTimerLoop();
+
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+function stopTimerLoop() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 }
 
 let smoothedDbPercent = 0;
@@ -232,6 +245,7 @@ async function startRecording() {
 
     sessionStartTs = Date.now();
     isRecording = true;
+    startTimerLoop();
     setMicActiveUI(true);
     updateSuggestionText("Recording...");
 
@@ -256,6 +270,7 @@ async function stopRecording() {
     if (!isRecording) return;
 
     isRecording = false;
+    stopTimerLoop();
     setMicActiveUI(false);
     updateSuggestionText("Processing...");
 

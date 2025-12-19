@@ -31,8 +31,14 @@ form.addEventListener("submit", async (e) => {
 
     const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+            data: {
+            name: name
+            }
+        }
     });
+
 
     if (error) {
         alert(error.message);
