@@ -1,161 +1,172 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile – VERBALYSTIC</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – VERBALYSTIC</title>
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
-    <style>
-        body {
-            font-family: "Inter", sans-serif;
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#359EFF",
+            "background-light": "#f5f7f8"
+          },
+          fontFamily: {
+            display: "Inter"
+          },
+          borderRadius: {
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px"
+          }
         }
+      }
+    };
+  </script>
 
-        .material-symbols-outlined {
-            font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
-        }
-    </style>
+  <style>
+    body { font-family: Inter, sans-serif; }
+    .material-icons-outlined { font-size: 20px; }
+  </style>
 </head>
 
-<body class="bg-[#F9FAFC] font-sans">
-    <div class="flex min-h-screen">
+<body class="bg-background-light text-gray-800">
+<div class="flex min-h-screen">
 
-        <!-- SIDEBAR -->
-        <aside class="flex w-64 flex-col border-r border-[#E4E7EB] bg-white p-4 shadow-sm">
+  <!-- SIDEBAR (IDENTICAL TO MAIN) -->
+  <aside class="w-64 bg-white p-6 flex flex-col justify-between rounded-r-2xl">
 
-            <!-- Logo -->
-            <div class="flex items-center justify-between">
-                <h1 class="text-lg font-bold text-slate-800">Verbalystic</h1>
-            </div>
+    <!-- TOP -->
+    <div>
+      <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary w-9 h-9 rounded-lg"></div>
+          <h1 class="text-xl font-bold text-gray-900">Verbalystic</h1>
+        </div>
+      </div>
 
-            <!-- Nav -->
-            <nav class="mt-8 flex flex-col gap-2">
+      <!-- NAV -->
+      <nav class="flex flex-col space-y-2">
 
-                <a href="main.html"
-                    class="flex items-center gap-3 rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100">
-                    <span class="material-symbols-outlined text-xl">add_circle</span>
-                    <span>New Session</span>
-                </a>
+        <a href="main.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">add_circle_outline</span>
+          <span class="font-medium">New Session</span>
+        </a>
 
-                <a href="history.html"
-                    class="flex items-center gap-3 rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100">
-                    <span class="material-symbols-outlined text-xl">history</span>
-                    <span>History</span>
-                </a>
+        <a href="history.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">history</span>
+          <span class="font-medium">History</span>
+        </a>
 
-                <a href="report.html"
-                    class="flex items-center gap-3 rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100">
-                    <span class="material-symbols-outlined text-xl">bar_chart</span>
-                    <span>Report</span>
-                </a>
+        <a href="report.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">bar_chart</span>
+          <span class="font-medium">Report</span>
+        </a>
 
-                <a href="profile.html"
-                    class="flex items-center gap-3 rounded-md bg-[#4DA8FF]/10 px-3 py-2 font-semibold text-[#4DA8FF]">
-                    <span class="material-symbols-outlined text-xl"
-                        style="font-variation-settings:'FILL' 1;">person</span>
-                    <span>Profile</span>
-                </a>
+        <!-- ACTIVE -->
+        <a href="profile.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-100 text-gray-900">
+          <span class="material-icons-outlined">person_outline</span>
+          <span class="font-medium">Profile</span>
+        </a>
 
-                <a href="setting.html"
-                    class="flex items-center gap-3 rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100">
-                    <span class="material-symbols-outlined text-xl">settings</span>
-                    <span>Settings</span>
-                </a>
+        <a href="setting.html"
+          class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+          <span class="material-icons-outlined">settings</span>
+          <span class="font-medium">Settings</span>
+        </a>
 
-            </nav>
+      </nav>
+    </div>
 
-            <!-- Bottom user card -->
-            <div class="mt-auto flex flex-col gap-4">
+    <!-- BOTTOM -->
+    <div class="flex flex-col space-y-2">
 
-                <div class="flex items-center gap-3 border-t border-[#E4E7EB] pt-4">
-                    <img id="sidebarUserImage" class="h-10 w-10 rounded-full object-cover"
-                        src="https://via.placeholder.com/100" />
-                    <p id="sidebarUserName" class="font-semibold text-slate-800">User</p>
-                </div>
+      <div class="flex items-center gap-3 px-4 py-2">
+        <img id="sidebarUserImage"
+             class="w-9 h-9 rounded-full object-cover"
+             src="https://placehold.co/40" />
+        <p id="sidebarUserName"
+           class="font-semibold text-sm text-gray-900">User</p>
+      </div>
 
-                <a id="logoutBtn"
-                    class="flex items-center gap-3 rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">
-                    <span class="material-symbols-outlined text-xl">logout</span>
-                    <span>Logout</span>
-                </a>
-
-            </div>
-
-        </aside>
-
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 overflow-y-auto p-8">
-
-            <div class="mx-auto max-w-7xl">
-
-                <!-- Profile Card -->
-                <div class="relative rounded-lg border border-[#E4E7EB] bg-white p-6 shadow-sm mb-6">
-                    <button id="editProfileBtn"
-                        class="absolute right-4 top-4 text-sm font-medium text-slate-600 hover:text-[#4DA8FF]">
-                        Edit
-                    </button>
-
-                    <div class="flex items-center gap-6">
-
-                        <img id="profileImage" class="h-24 w-24 rounded-full object-cover"
-                            src="https://via.placeholder.com/150" />
-
-                        <div>
-                            <h1 id="profileName" class="text-2xl font-bold text-slate-800">User Name</h1>
-                            <p id="profileEmail" class="text-slate-500">email@example.com</p>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- USER STATS -->
-                <div class="grid grid-cols-2 gap-6 md:grid-cols-4 mb-6">
-                    <div class="rounded-lg border bg-white p-4 shadow-sm">
-                        <h3 class="text-sm text-slate-500">Daily Streak</h3>
-                        <p id="streakCount" class="mt-1 text-2xl font-bold text-slate-800">0 Days</p>
-                    </div>
-                    <div class="rounded-lg border bg-white p-4 shadow-sm">
-                        <h3 class="text-sm text-slate-500">Total Sessions</h3>
-                        <p id="totalSessions" class="mt-1 text-2xl font-bold text-slate-800">0</p>
-                    </div>
-                    <div class="rounded-lg border bg-white p-4 shadow-sm">
-                        <h3 class="text-sm text-slate-500">Weekly Consistency</h3>
-                        <p id="weeklyConsistency" class="mt-1 text-2xl font-bold text-slate-800">0%</p>
-                    </div>
-                    <div class="rounded-lg border bg-white p-4 shadow-sm">
-                        <h3 class="text-sm text-slate-500">Speaking Minutes</h3>
-                        <p id="speakingMinutes" class="mt-1 text-2xl font-bold text-slate-800">0</p>
-                    </div>
-                </div>
-
-                <!-- PERSONALIZED ROADMAP -->
-                <div class="rounded-lg border bg-white p-6 shadow-sm mb-6">
-                    <h2 class="text-lg font-semibold text-slate-800">Personalized Roadmap</h2>
-                    <div id="roadmapContainer" class="mt-4 space-y-4">
-                        <!-- JS will insert your roadmap dynamically -->
-                    </div>
-                </div>
-
-                <!-- ACHIEVEMENTS -->
-                <div class="rounded-lg border bg-white p-6 shadow-sm mb-6">
-                    <h2 class="text-lg font-semibold text-slate-800">Achievements</h2>
-                    <div id="achievementsContainer"
-                        class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                        <!-- JS will populate badges -->
-                    </div>
-                </div>
-
-            </div>
-
-        </main>
+      <a id="logoutBtn"
+        class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 cursor-pointer">
+        <span class="material-icons-outlined">logout</span>
+        <span class="font-medium">Logout</span>
+      </a>
 
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="profile.js"></script>
-</body>
+  </aside>
 
+  <!-- MAIN CONTENT (UNCHANGED) -->
+  <main class="flex-1 p-8 overflow-y-auto">
+    <div class="max-w-7xl mx-auto">
+
+      <!-- PROFILE CARD -->
+      <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
+        <div class="flex items-center gap-6">
+          <img id="profileImage" class="h-24 w-24 rounded-full object-cover"
+               src="https://via.placeholder.com/150" />
+          <div>
+            <h1 id="profileName" class="text-2xl font-bold">—</h1>
+            <p id="profileEmail" class="text-gray-500">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white p-4 rounded shadow-sm">
+          <p class="text-sm text-gray-500">Daily Streak</p>
+          <p id="streakCount" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+          <p class="text-sm text-gray-500">Total Sessions</p>
+          <p id="totalSessions" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+          <p class="text-sm text-gray-500">Weekly Consistency</p>
+          <p id="weeklyConsistency" class="text-2xl font-bold">0%</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow-sm">
+          <p class="text-sm text-gray-500">Speaking Minutes</p>
+          <p id="speakingMinutes" class="text-2xl font-bold">0</p>
+        </div>
+      </div>
+
+      <!-- ROADMAP -->
+      <div class="bg-white rounded-lg p-6 shadow-sm mb-6">
+        <h2 class="text-lg font-semibold">Personalized Roadmap</h2>
+        <div id="roadmapContainer" class="mt-4 space-y-3 text-sm text-gray-600"></div>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h2 class="text-lg font-semibold">Achievements</h2>
+        <div id="achievementsContainer"
+             class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./profile.js"></script>
+</body>
 </html>

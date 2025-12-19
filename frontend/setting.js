@@ -1,9 +1,8 @@
 console.log("setting.js loaded");
 
 /* =========================
-   Supabase Initialization
+   SUPABASE INIT
    ========================= */
-
 const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
@@ -14,57 +13,57 @@ const supabase = window.supabase.createClient(
 );
 
 /* =========================
-   AUTH + LOAD SETTINGS
+   LOAD SETTINGS (FAST)
    ========================= */
-
 async function loadSettings() {
-  // 1️⃣ Check session first
-  const { data: sessionData } = await supabase.auth.getSession();
+  const emailEl = document.getElementById("settingEmail");
+  const nameEl = document.getElementById("settingName");
 
-  if (!sessionData.session) {
+  // Default placeholders (instant UI)
+  emailEl.innerText = "—";
+  nameEl.innerText = "Loading...";
+
+  // Get auth session
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session) {
     window.location.href = "login.html";
     return;
   }
 
-  // 2️⃣ Get authenticated user
-  const user = sessionData.session.user;
-  console.log("AUTH USER:", user);
+  const user = data.session.user;
 
-  // 3️⃣ Email (always from auth)
-  document.getElementById("settingEmail").innerText =
-    user.email || "—";
+  /* ===== EMAIL (always instant) ===== */
+  emailEl.innerText = user.email || "—";
 
-  // 4️⃣ Name (metadata → fallback backend)
+  /* ===== NAME (priority order) ===== */
+  // 1️⃣ Metadata → instant
   if (user.user_metadata?.name) {
-    document.getElementById("settingName").innerText =
-      user.user_metadata.name;
-  } else {
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/get-user/${user.id}`
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        document.getElementById("settingName").innerText =
-          data.name || "—";
-      } else {
-        document.getElementById("settingName").innerText = "—";
-      }
-    } catch (err) {
-      console.warn("Backend name fetch failed");
-      document.getElementById("settingName").innerText = "—";
-    }
+    nameEl.innerText = user.user_metadata.name;
+    return;
   }
+
+  // 2️⃣ Backend → background fetch (NON-BLOCKING)
+  fetch(`http://127.0.0.1:8000/get-user/${user.id}`)
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (data?.name) {
+        nameEl.innerText = data.name;
+      } else {
+        nameEl.innerText = "—";
+      }
+    })
+    .catch(() => {
+      nameEl.innerText = "—";
+    });
 }
 
 /* =========================
    CHANGE PASSWORD
    ========================= */
-
 document
   .getElementById("changePasswordBtn")
-  .addEventListener("click", async () => {
+  ?.addEventListener("click", async () => {
     const newPassword = prompt("Enter your new password:");
     if (!newPassword) return;
 
@@ -77,16 +76,15 @@ document
       return;
     }
 
-    alert("Password updated successfully!");
+    alert("Password updated successfully");
   });
 
 /* =========================
    LOGOUT
    ========================= */
-
 document
   .getElementById("logoutBtn")
-  .addEventListener("click", async () => {
+  ?.addEventListener("click", async () => {
     await supabase.auth.signOut();
     window.location.href = "login.html";
   });
@@ -94,5 +92,4 @@ document
 /* =========================
    INIT
    ========================= */
-
 loadSettings();
