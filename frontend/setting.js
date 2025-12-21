@@ -3,14 +3,15 @@ console.log("setting.js loaded");
 /* =========================
    SUPABASE INIT
    ========================= */
-const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
 
-const supabase = window.supabase.createClient(
+const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+
+window.supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+
 
 /* =========================
    LOAD SETTINGS (FAST)
@@ -24,7 +25,7 @@ async function loadSettings() {
   nameEl.innerText = "Loading...";
 
   // Get auth session
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await supabaseClient.auth.getSession();
 
   if (error || !data.session) {
     window.location.href = "login.html";
@@ -67,7 +68,7 @@ document
     const newPassword = prompt("Enter your new password:");
     if (!newPassword) return;
 
-    const { error } = await supabase.auth.updateUser({
+    const { error } = await supabaseClient.auth.updateUser({
       password: newPassword
     });
 
@@ -85,7 +86,7 @@ document
 document
   .getElementById("logoutBtn")
   ?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     window.location.href = "login.html";
   });
 
