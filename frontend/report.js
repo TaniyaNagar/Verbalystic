@@ -39,7 +39,7 @@ async function loadUserInfo(user) {
     const data = await res.json();
     console.log("User info:", data);
 
-    const nameEl = document.getElementById("sidebarUserName");
+    const nameEl = document.getElementById("userName");
     if (nameEl) nameEl.innerText = data.name || "User";
 
     const streakEl = document.getElementById("streakCount");

@@ -11,7 +11,47 @@ window.supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+/* =========================
+   AUTH
+   ========================= */
+async function getAuthenticatedUser() {
+  const { data } = await supabaseClient.auth.getSession();
 
+  if (!data.session) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return data.session.user;
+}
+
+(async function init() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const user = data.session.user;
+
+  await loadUserInfo(user); // ✅ SIDEBAR NAME
+  await loadSettings();    // ✅ SETTINGS PANEL
+})();
+
+async function loadUserInfo(user) {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/get-user/${user.id}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    const nameEl = document.getElementById("userName");
+    if (nameEl) nameEl.innerText = data.name || "User";
+
+  } catch (err) {
+    console.error("Failed to load user info", err);
+  }
+}
 
 /* =========================
    LOAD SETTINGS (FAST)
@@ -19,7 +59,7 @@ window.supabaseClient = window.supabase.createClient(
 async function loadSettings() {
   const emailEl = document.getElementById("settingEmail");
   const nameEl = document.getElementById("settingName");
-
+  const nameE2 = document.getElementById("userName");
   // Default placeholders (instant UI)
   emailEl.innerText = "—";
   nameEl.innerText = "Loading...";

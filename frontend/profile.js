@@ -27,7 +27,23 @@ async function getAuthenticatedUser() {
 
   return data.session.user;
 }
+/* =========================
+   Load User Info
+   ========================= */
+async function loadUserInfo(user) {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/get-user/${user.id}`);
+    if (!res.ok) return;
 
+    const data = await res.json();
+
+    document.getElementById("userName").innerText =
+      data.name || "User";
+
+  } catch (err) {
+    console.error("Failed to load user info", err);
+  }
+}
 /* =========================
    LOAD PROFILE
    ========================= */

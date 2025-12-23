@@ -74,6 +74,26 @@ const micBg = document.getElementById("micBg");
 const rippleContainer = document.getElementById("rippleContainer");
 
 /* =========================
+   Load User Info
+   ========================= */
+async function loadUserInfo(user) {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/get-user/${user.id}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    document.getElementById("userName").innerText =
+      data.name || "User";
+
+  } catch (err) {
+    console.error("Failed to load user info", err);
+  }
+}
+
+
+
+/* =========================
    Socket.IO Loader
    ========================= */
 
@@ -384,3 +404,10 @@ window.addEventListener("beforeunload", () => isRecording && stopRecording());
 setMicActiveUI(false);
 updateTimer();
 updateSuggestionText("Click the mic to start a session.");
+
+(async function init() {
+  const user = await getAuthenticatedUser();
+  if (!user) return;
+
+  await loadUserInfo(user);
+})();
