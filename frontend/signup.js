@@ -1,12 +1,14 @@
 console.log("signup.js loaded");
 
 
-const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+const APP_CONFIG = window.VERBALYSTIC_CONFIG || {
+  supabaseUrl: "https://lbacierqszcgokimijtg.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE"
+};
 
-window.supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  APP_CONFIG.supabaseUrl,
+  APP_CONFIG.supabaseAnonKey
 );
 
 
@@ -30,7 +32,7 @@ form.addEventListener("submit", async (e) => {
         return;
     }
 
-    const { data, error } = await supabaseClient.auth.signUp({
+    const { data, error } = await window.supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -54,7 +56,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     // INSERT INTO users table
-    const { error: insertError } = await supabaseClient
+    const { error: insertError } = await window.supabaseClient
         .from("users")
         .insert({
             id: user.id,
