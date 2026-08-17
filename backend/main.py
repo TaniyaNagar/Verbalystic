@@ -1,38 +1,111 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import date, timedelta
-import bcrypt, os, time
+import bcrypt, json, os, time
+import urllib.error
+import urllib.request
 import uvicorn
 
 from backend.realtime import sio_app
 from backend.database import get_connection
+from backend.ai_service import generate_ai_improved_transcript
 from textblob import TextBlob
+
+DEFAULT_ALLOWED_ORIGINS = [
+    "https://verbalystic-nu.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
+SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+MAX_AUDIO_UPLOAD_BYTES = int(os.getenv("MAX_AUDIO_UPLOAD_BYTES", "25000000"))
+
+
+def parse_allowed_origins():
+    raw = os.getenv("CORS_ALLOWED_ORIGINS")
+    if not raw:
+        return DEFAULT_ALLOWED_ORIGINS
+    return [origin.strip().rstrip("/") for origin in raw.split(",") if origin.strip()]
+
+
+def supabase_auth_configured():
+    return bool(SUPABASE_URL and SUPABASE_ANON_KEY)
+
+
+def get_bearer_token(request: Request) -> Optional[str]:
+    auth_header = request.headers.get("authorization", "")
+    scheme, _, token = auth_header.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        return None
+    return token.strip()
+
+
+def get_authenticated_user_id(request: Request) -> str:
+    token = get_bearer_token(request)
+    if not token:
+        raise HTTPException(401, "Authentication required")
+
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/auth/v1/user",
+        headers={
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError:
+        raise HTTPException(401, "Invalid authentication token")
+    except urllib.error.URLError:
+        raise HTTPException(503, "Authentication service unavailable")
+
+    user_id = payload.get("id") or payload.get("sub")
+    if not user_id:
+        raise HTTPException(401, "Invalid authentication token")
+    return user_id
+
+
+def resolve_user_id(request: Request, supplied_user_id: str) -> str:
+    if not supabase_auth_configured():
+        return supplied_user_id
+
+    auth_user_id = get_authenticated_user_id(request)
+    if supplied_user_id and str(supplied_user_id) != str(auth_user_id):
+        raise HTTPException(403, "User ID does not match authenticated user")
+    return auth_user_id
+
+
+def safe_user_id_for_filename(user_id: str) -> str:
+    return "".join(ch for ch in user_id if ch.isalnum() or ch in "-_") or "user"
 
 # =========================================================
 # APP SETUP
 # =========================================================
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=parse_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount("/ws", sio_app)
+
 
 @app.get("/")
 def root():
     return {"status": "Verbalystic backend running"}
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://verbalystic-nu.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=port)
 
 
 # =========================================================
@@ -78,6 +151,8 @@ def register(user: UserSignup):
 
     cur.execute("SELECT id FROM users WHERE email=%s", (user.email,))
     if cur.fetchone():
+        cur.close()
+        conn.close()
         raise HTTPException(400, "Email already exists")
 
     cur.execute(
@@ -105,6 +180,8 @@ def login(data: UserLogin):
     row = cur.fetchone()
 
     if not row or not verify_password(data.password, row[1]):
+        cur.close()
+        conn.close()
         raise HTTPException(401, "Invalid credentials")
 
     cur.close()
@@ -116,7 +193,8 @@ def login(data: UserLogin):
 # SESSION + STREAK + AI
 # =========================================================
 @app.get("/get-user/{user_id}")
-def get_user(user_id: str):
+def get_user(user_id: str, request: Request):
+    user_id = resolve_user_id(request, user_id)
     conn = get_connection()
     cur = conn.cursor()
 
@@ -129,6 +207,8 @@ def get_user(user_id: str):
     user = cur.fetchone()
 
     if not user:
+        cur.close()
+        conn.close()
         raise HTTPException(404, "User not found")
 
     name, email, streak = user
@@ -164,7 +244,12 @@ def get_user(user_id: str):
     }
 
 @app.post("/create-session")
-def create_session(data: SessionCreate, bg: BackgroundTasks):
+def create_session(data: SessionCreate, bg: BackgroundTasks, request: Request):
+    user_id = resolve_user_id(request, data.user_id)
+    transcript = (data.transcript or "").strip()
+    if not transcript:
+        raise HTTPException(400, "Transcript is required to create a session")
+
     conn = get_connection()
     cur = conn.cursor()
 
@@ -173,7 +258,7 @@ def create_session(data: SessionCreate, bg: BackgroundTasks):
         # ----- STREAK -----
         cur.execute(
             "SELECT last_session_date, streak_count FROM users WHERE id=%s",
-            (data.user_id,),
+            (user_id,),
         )
         row = cur.fetchone()
         if not row:
@@ -196,11 +281,11 @@ def create_session(data: SessionCreate, bg: BackgroundTasks):
             SET streak_count=%s, last_session_date=%s
             WHERE id=%s
             """,
-            (new_streak, today, data.user_id),
+            (new_streak, today, user_id),
         )
 
         # ----- LOCAL ANALYSIS -----
-        analysis = analyze_transcript(data.transcript or "")
+        analysis = analyze_transcript(transcript)
 
         cur.execute(
             """
@@ -211,9 +296,9 @@ def create_session(data: SessionCreate, bg: BackgroundTasks):
             RETURNING id
             """,
             (
-                data.user_id,
+                user_id,
                 data.audio_url,
-                data.transcript,
+                transcript,
                 data.duration_seconds,
                 data.avg_wpm,
                 analysis["filler_word_count"],
@@ -236,16 +321,19 @@ def create_session(data: SessionCreate, bg: BackgroundTasks):
         # ✅ FIXED: correct arguments
         bg.add_task(
             process_ai,
-            data.user_id,
-            data.transcript or "",
+            user_id,
+            transcript,
             session_id,
         )
 
         return {"session_id": session_id, "streak_count": new_streak}
 
-    except Exception as e:
+    except HTTPException:
         conn.rollback()
-        raise HTTPException(400, str(e))
+        raise
+    except Exception:
+        conn.rollback()
+        raise HTTPException(400, "Session creation failed")
     finally:
         cur.close()
         conn.close()
@@ -272,17 +360,17 @@ def ai_usage_count(user_id: str) -> int:
     return count
 
 def process_ai(user_id: str, transcript: str, session_id: str):
-    # ---- HARD LIMIT: 4 USES ----
-    used = ai_usage_count(user_id)
-
-    if used >= 4:
-        print(f"AI LIMIT REACHED for user {user_id}")
-        return
-
-    if not transcript or len(transcript.split()) < 2:
-        return
-
     try:
+        # ---- HARD LIMIT: 4 USES ----
+        used = ai_usage_count(user_id)
+
+        if used >= 4:
+            print("AI limit reached")
+            return
+
+        if not transcript or len(transcript.split()) < 2:
+            return
+
         improved = generate_ai_improved_transcript(transcript)
         if not improved:
             return
@@ -296,10 +384,10 @@ def process_ai(user_id: str, transcript: str, session_id: str):
         """, (improved, session_id))
         conn.commit()
 
-        print(f"AI USED {used + 1}/4")
+        print(f"AI used {used + 1}/4")
 
     except Exception as e:
-        print("AI ERROR:", e)
+        print(f"AI error: {e.__class__.__name__}")
 
     finally:
         if "cur" in locals():
@@ -312,7 +400,8 @@ def process_ai(user_id: str, transcript: str, session_id: str):
 # =========================================================
 
 @app.get("/get-latest-report/{user_id}")
-def get_latest_report(user_id: str):
+def get_latest_report(user_id: str, request: Request):
+    user_id = resolve_user_id(request, user_id)
     conn = get_connection()
     cur = conn.cursor()
 
@@ -329,6 +418,8 @@ def get_latest_report(user_id: str):
     )
     session = cur.fetchone()
     if not session:
+        cur.close()
+        conn.close()
         raise HTTPException(404, "No sessions")
 
     session_id = session[0]
@@ -369,7 +460,8 @@ def get_latest_report(user_id: str):
 # PERFORMANCE TRENDS (FOR REPORT CHART)
 # =========================================================
 @app.get("/report/trends/{user_id}")
-def report_trends(user_id: str):
+def report_trends(user_id: str, request: Request):
+    user_id = resolve_user_id(request, user_id)
     conn = get_connection()
     cur = conn.cursor()
 
@@ -401,10 +493,23 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @app.post("/upload-audio")
-async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
-    path = f"{UPLOAD_DIR}/{user_id}_{int(time.time())}.webm"
+async def upload_audio(
+    request: Request,
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+):
+    user_id = resolve_user_id(request, user_id)
+    contents = await file.read()
+    if len(contents) > MAX_AUDIO_UPLOAD_BYTES:
+        raise HTTPException(413, "Audio file is too large")
+
+    content_type = (file.content_type or "").lower()
+    if content_type and not content_type.startswith("audio/"):
+        raise HTTPException(400, "Invalid audio file type")
+
+    path = f"{UPLOAD_DIR}/{safe_user_id_for_filename(user_id)}_{int(time.time())}.webm"
     with open(path, "wb") as f:
-        f.write(await file.read())
+        f.write(contents)
     return {"url": path}
 
 
@@ -435,10 +540,12 @@ def analyze_transcript(text: str):
     }
 
 @app.get("/get-roadmap/{user_id}")
-def get_roadmap(user_id: str):
+def get_roadmap(user_id: str, request: Request):
+    resolve_user_id(request, user_id)
     return { "roadmap": [] }
 
 
 @app.get("/get-achievements/{user_id}")
-def get_achievements(user_id: str):
+def get_achievements(user_id: str, request: Request):
+    resolve_user_id(request, user_id)
     return { "achievements": [] }
