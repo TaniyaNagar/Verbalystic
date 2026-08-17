@@ -11,13 +11,12 @@ def get_connection():
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL not found. Check your .env file.")
+        raise RuntimeError("DATABASE_URL is not configured.")
 
     try:
-        # psycopg2 requires dsn string only, no additional params
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
         return conn
 
     except Exception as e:
-        print("Database Connection Error:", e)
-        raise RuntimeError(f"Database connection failed: {e}")
+        print(f"Database connection error: {e.__class__.__name__}")
+        raise RuntimeError("Database connection failed.")
