@@ -34,12 +34,15 @@ const mockTrends = {
    SUPABASE INIT
 ========================= */
 
-const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_KEY";
+const APP_CONFIG = window.VERBALYSTIC_CONFIG || {
+  backendBaseUrl: "https://verbalystic-idto.onrender.com",
+  supabaseUrl: "https://lbacierqszcgokimijtg.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE"
+};
 
-window.supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  APP_CONFIG.supabaseUrl,
+  APP_CONFIG.supabaseAnonKey
 );
 
 
@@ -48,7 +51,7 @@ window.supabaseClient = window.supabase.createClient(
 ========================= */
 
 async function getAuthenticatedUser() {
-  const { data } = await supabaseClient.auth.getSession();
+  const { data } = await window.supabaseClient.auth.getSession();
 
   if (!data.session) {
     window.location.href = "login.html";
@@ -64,7 +67,7 @@ async function getAuthenticatedUser() {
 
 async function loadUserInfo(user) {
   try {
-    const res = await fetch(`https://verbalystic-idto.onrender.com/get-user/${user.id}`);
+    const res = await window.authenticatedFetch(`${APP_CONFIG.backendBaseUrl}/get-user/${user.id}`);
     if (!res.ok) return;
 
     const data = await res.json();
@@ -87,24 +90,26 @@ async function loadUserInfo(user) {
 
 async function loadLatestReport(userId) {
   try {
-    const res = await fetch(
-      `https://verbalystic-idto.onrender.com/get-latest-report/${userId}`
+    const res = await window.authenticatedFetch(
+      `${APP_CONFIG.backendBaseUrl}/get-latest-report/${userId}`
     );
 
-    let data = null;
-
-    if (res.ok) {
-      data = await res.json();
+    if (!res.ok) {
+      throw new Error("Latest report fetch failed");
     }
+
+    const data = await res.json();
 
     let session = data?.session;
     let analysis = data?.analysis;
 
     // 🔥 EMPTY → MOCK
     if (!session || !session.transcript) {
-      console.warn("Using mock report");
-      session = mockReport.session;
-      analysis = mockReport.analysis;
+      document.getElementById("rawTranscript").innerText =
+        "No transcript is available yet.";
+      document.getElementById("improvedTranscript").innerText =
+        "Complete a speaking session to generate a report.";
+      return;
     }
 
     /* ----- RAW TRANSCRIPT ----- */
@@ -115,7 +120,7 @@ async function loadLatestReport(userId) {
     let improvedText = analysis?.summary_report;
 
     if (!improvedText || improvedText.trim() === "") {
-      improvedText = mockReport.analysis.summary_report;
+      improvedText = "AI improved transcript is not ready yet.";
     }
 
     document.getElementById("improvedTranscript").innerText = improvedText;
@@ -141,17 +146,29 @@ async function loadLatestReport(userId) {
         </tr>`;
     } else {
       issues.forEach(i => {
-        grammarTable.innerHTML += `
-          <tr class="border-t">
-            <td>${i.issue}</td>
-            <td>${i.suggestion}</td>
-            <td>${i.errorCount}</td>
-          </tr>`;
+        const row = document.createElement("tr");
+        row.className = "border-t";
+
+        const issueCell = document.createElement("td");
+        issueCell.textContent = i.issue || "";
+
+        const suggestionCell = document.createElement("td");
+        suggestionCell.textContent = i.suggestion || "";
+
+        const countCell = document.createElement("td");
+        countCell.textContent = i.errorCount ?? "";
+
+        row.append(issueCell, suggestionCell, countCell);
+        grammarTable.appendChild(row);
       });
     }
 
   } catch (err) {
     console.error("Report error", err);
+    document.getElementById("rawTranscript").innerText =
+      "Unable to load the latest report.";
+    document.getElementById("improvedTranscript").innerText =
+      "Please try again later.";
   }
 }
 
@@ -165,20 +182,19 @@ async function loadPerformanceChart(userId) {
   if (!canvas) return;
 
   try {
-    const res = await fetch(
-      `https://verbalystic-idto.onrender.com/report/trends/${userId}`
+    const res = await window.authenticatedFetch(
+      `${APP_CONFIG.backendBaseUrl}/report/trends/${userId}`
     );
 
-    let data = null;
-
-    if (res.ok) {
-      data = await res.json();
+    if (!res.ok) {
+      throw new Error("Performance trends fetch failed");
     }
+
+    const data = await res.json();
 
     // 🔥 EMPTY → MOCK
     if (!data || !data.labels || data.labels.length === 0) {
-      console.warn("Using mock trends");
-      data = mockTrends;
+      return;
     }
 
     new Chart(canvas, {
@@ -208,7 +224,7 @@ async function loadPerformanceChart(userId) {
 ========================= */
 
 document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
+  await window.supabaseClient.auth.signOut();
   window.location.href = "login.html";
 });
 
