@@ -40,6 +40,12 @@ async function getAuthenticatedUser() {
         return null;
     }
 
+    try {
+        await window.ensureBackendUserProfile();
+    } catch (err) {
+        console.error("Backend profile sync failed", err);
+    }
+
     return sessionData.session.user;
 }
 

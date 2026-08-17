@@ -57,6 +57,12 @@ async function getAuthenticatedUser() {
     window.location.href = "login.html";
     return null;
   }
+  try {
+    await window.ensureBackendUserProfile();
+  } catch (err) {
+    console.error("Backend profile sync failed", err);
+  }
+
   return data.session.user;
 }
 

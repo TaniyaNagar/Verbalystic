@@ -44,7 +44,7 @@ def get_bearer_token(request: Request) -> Optional[str]:
     return token.strip()
 
 
-def get_authenticated_user_id(request: Request) -> str:
+def get_authenticated_user(request: Request) -> dict:
     token = get_bearer_token(request)
     if not token:
         raise HTTPException(401, "Authentication required")
@@ -65,10 +65,14 @@ def get_authenticated_user_id(request: Request) -> str:
     except urllib.error.URLError:
         raise HTTPException(503, "Authentication service unavailable")
 
-    user_id = payload.get("id") or payload.get("sub")
-    if not user_id:
+    if not (payload.get("id") or payload.get("sub")):
         raise HTTPException(401, "Invalid authentication token")
-    return user_id
+    return payload
+
+
+def get_authenticated_user_id(request: Request) -> str:
+    payload = get_authenticated_user(request)
+    return payload.get("id") or payload.get("sub")
 
 
 def resolve_user_id(request: Request, supplied_user_id: str) -> str:
@@ -139,6 +143,49 @@ class SessionCreate(BaseModel):
     transcript: Optional[str] = None
     duration_seconds: Optional[int] = None
     avg_wpm: Optional[int] = None
+
+
+# =========================================================
+# SUPABASE PROFILE SYNC
+# =========================================================
+@app.post("/sync-user-profile")
+def sync_user_profile(request: Request):
+    if not supabase_auth_configured():
+        raise HTTPException(503, "Supabase auth configuration is missing")
+
+    auth_user = get_authenticated_user(request)
+    user_id = auth_user.get("id") or auth_user.get("sub")
+    email = auth_user.get("email") or ""
+    metadata = auth_user.get("user_metadata") or {}
+    name = metadata.get("name") or metadata.get("full_name") or ""
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            INSERT INTO users (id, email, name)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (id) DO UPDATE
+            SET
+                email = EXCLUDED.email,
+                name = COALESCE(NULLIF(EXCLUDED.name, ''), users.name)
+            RETURNING id
+            """,
+            (user_id, email, name),
+        )
+        synced_user_id = cur.fetchone()[0]
+        conn.commit()
+        return {"user_id": synced_user_id}
+
+    except Exception:
+        conn.rollback()
+        raise HTTPException(500, "User profile sync failed")
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 # =========================================================

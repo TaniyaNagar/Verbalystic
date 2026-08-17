@@ -36,4 +36,17 @@
     const headers = await window.getAuthHeaders(options.headers || {});
     return fetch(url, { ...options, headers });
   };
+
+  window.ensureBackendUserProfile = async function ensureBackendUserProfile() {
+    const res = await window.authenticatedFetch(
+      `${window.VERBALYSTIC_CONFIG.backendBaseUrl}/sync-user-profile`,
+      { method: "POST" }
+    );
+
+    if (!res.ok) {
+      throw new Error("Backend user profile sync failed");
+    }
+
+    return res.json();
+  };
 })();
