@@ -5,8 +5,11 @@ python-dotenv
 bcrypt
 textblob
 python-socketio
+websockets
 vosk
+google-genai
 google-generativeai
 pydantic[email]
 email-validator
 python-multipart
+requests
