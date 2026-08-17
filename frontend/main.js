@@ -4,22 +4,26 @@ console.log("Main.js (real-time) loaded");
    Supabase Initialization
    ========================= */
 
-const SUPABASE_URL = "https://lbacierqszcgokimijtg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE";
+const APP_CONFIG = window.VERBALYSTIC_CONFIG || {
+    backendBaseUrl: "https://verbalystic-idto.onrender.com",
+    supabaseUrl: "https://lbacierqszcgokimijtg.supabase.co",
+    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWNpZXJxc3pjZ29raW1panRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODEyMTEsImV4cCI6MjA3OTA1NzIxMX0.roI92a8edtAlHGL78effXlQ3XRCwAF2lGpBkyX4SQIE"
+};
 
-window.supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  APP_CONFIG.supabaseUrl,
+  APP_CONFIG.supabaseAnonKey
 );
 
 
 /* =========================
    Config
    ========================= */
-const BASE_URL = "https://verbalystic-idto.onrender.com";
+const BASE_URL = APP_CONFIG.backendBaseUrl;
 const SOCKET_URL = BASE_URL;
 const UPLOAD_AUDIO_URL = `${BASE_URL}/upload-audio`;
 const CREATE_SESSION_URL = `${BASE_URL}/create-session`;
+const TARGET_SAMPLE_RATE = 16000;
 
 const FILLER_WORDS = ["um", "uh", "like", "you know", "so", "actually", "basically", "right"];
 
@@ -28,7 +32,7 @@ const FILLER_WORDS = ["um", "uh", "like", "you know", "so", "actually", "basical
    ========================= */
 
 async function getAuthenticatedUser() {
-    const { data: sessionData, error } = await supabaseClient.auth.getSession();
+    const { data: sessionData, error } = await window.supabaseClient.auth.getSession();
 
     if (error || !sessionData.session) {
         console.warn("No active Supabase session");
@@ -60,6 +64,8 @@ let liveFillerCount = 0;
 let decibelSmoothing = 0.85;
 let CURRENT_USER = null;
 let timerInterval = null;
+let finalTranscript = "";
+let partialTranscript = "";
 
 /* =========================
    UI Elements
@@ -78,7 +84,7 @@ const rippleContainer = document.getElementById("rippleContainer");
    ========================= */
 async function loadUserInfo(user) {
   try {
-    const res = await fetch(`${BASE_URL}/get-user/${user.id}`);
+    const res = await window.authenticatedFetch(`${BASE_URL}/get-user/${user.id}`);
     if (!res.ok) return;
 
     const data = await res.json();
@@ -109,7 +115,7 @@ async function ensureSocketIoClient() {
 }
 
 /* =========================
-   Audio Utils (unchanged)
+   Audio Utils
    ========================= */
 
 function floatTo16BitPCM(float32Array) {
@@ -124,22 +130,42 @@ function floatTo16BitPCM(float32Array) {
 }
 
 function downsampleBuffer(buffer, inputSampleRate, outSampleRate) {
-    if (outSampleRate === inputSampleRate) return buffer;
+    if (outSampleRate === inputSampleRate) return floatTo16BitPCM(buffer);
     const ratio = inputSampleRate / outSampleRate;
     const newLength = Math.round(buffer.length / ratio);
-    const result = new Int16Array(newLength);
+    const output = new ArrayBuffer(newLength * 2);
+    const view = new DataView(output);
     let offsetResult = 0, offsetBuffer = 0;
-    while (offsetResult < result.length) {
+    while (offsetResult < newLength) {
         const nextOffset = Math.round((offsetResult + 1) * ratio);
         let accum = 0, count = 0;
         for (let i = offsetBuffer; i < nextOffset && i < buffer.length; i++) {
             accum += buffer[i];
             count++;
         }
-        result[offsetResult++] = (accum / count) * 0x7fff;
+        const sample = count ? accum / count : 0;
+        const clamped = Math.max(-1, Math.min(1, sample));
+        view.setInt16(
+            offsetResult * 2,
+            clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff,
+            true
+        );
+        offsetResult++;
         offsetBuffer = nextOffset;
     }
-    return result.buffer;
+    return output;
+}
+
+function normalizeTranscript(text) {
+    return (text || "").trim().replace(/\s+/g, " ");
+}
+
+function appendTranscriptSegment(base, segment) {
+    return normalizeTranscript([base, segment].filter(Boolean).join(" "));
+}
+
+function currentTranscript() {
+    return appendTranscriptSegment(finalTranscript, partialTranscript);
 }
 
 /* =========================
@@ -242,6 +268,11 @@ function updateSuggestionText(text) {
 async function initSocket() {
     await ensureSocketIoClient();
 
+    if (socket) {
+        socket.removeAllListeners();
+        socket.disconnect();
+    }
+
     socket = io(SOCKET_URL, {
         path: "/ws/socket.io",
         transports: ["websocket"],
@@ -251,8 +282,15 @@ async function initSocket() {
         socket.emit("identify", { user_id: CURRENT_USER.id });
     });
 
-    socket.on("live_transcript", ({ text }) => {
-        lastTranscript = text || "";
+    socket.on("live_transcript", ({ text, transcript, is_final }) => {
+        if (is_final) {
+            finalTranscript = normalizeTranscript(transcript || appendTranscriptSegment(finalTranscript, text));
+            partialTranscript = "";
+        } else {
+            partialTranscript = normalizeTranscript(text);
+        }
+
+        lastTranscript = normalizeTranscript(transcript || currentTranscript());
         computeLocalStatsFromTranscript(lastTranscript);
     });
 
@@ -260,6 +298,56 @@ async function initSocket() {
         updateSuggestionText(
             `${suggestion || ""} • WPM: ${Math.round(wpm || liveWpm)} • Fillers: ${fillerCount || liveFillerCount}`
         );
+    });
+}
+
+function emitWithAck(eventName, payload, timeoutMs = 5000) {
+    return new Promise((resolve) => {
+        if (!socket || !socket.connected) {
+            resolve(null);
+            return;
+        }
+
+        let settled = false;
+        const timer = setTimeout(() => {
+            if (!settled) {
+                settled = true;
+                resolve(null);
+            }
+        }, timeoutMs);
+
+        socket.emit(eventName, payload, (response) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(response || null);
+        });
+    });
+}
+
+async function finishRealtimeTranscript() {
+    const response = await emitWithAck("session_end", { user_id: CURRENT_USER.id });
+    if (response?.ok && response.transcript) {
+        finalTranscript = normalizeTranscript(response.transcript);
+        partialTranscript = "";
+        lastTranscript = finalTranscript;
+    } else {
+        lastTranscript = currentTranscript();
+    }
+
+    computeLocalStatsFromTranscript(lastTranscript);
+    return lastTranscript;
+}
+
+function stopMediaRecorder() {
+    return new Promise((resolve) => {
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            resolve();
+            return;
+        }
+
+        mediaRecorder.addEventListener("stop", resolve, { once: true });
+        mediaRecorder.stop();
     });
 }
 
@@ -309,6 +397,13 @@ async function startRecording() {
     processorNode = audioContext.createScriptProcessor(4096, 1, 1);
 
     recordedChunks = [];
+    finalTranscript = "";
+    partialTranscript = "";
+    lastTranscript = "";
+    totalWordsCount = 0;
+    liveWpm = 0;
+    liveFillerCount = 0;
+
     mediaRecorder = new MediaRecorder(mediaStream);
     mediaRecorder.ondataavailable = e => e.data.size && recordedChunks.push(e.data);
     mediaRecorder.start(1000);
@@ -331,9 +426,9 @@ async function startRecording() {
         updateDecibelBar(rms);
 
         const floatCopy = new Float32Array(input);
-        const buf = audioContext.sampleRate === 16000
+        const buf = audioContext.sampleRate === TARGET_SAMPLE_RATE
             ? floatTo16BitPCM(floatCopy)
-            : downsampleBuffer(floatCopy, audioContext.sampleRate, 16000);
+            : downsampleBuffer(floatCopy, audioContext.sampleRate, TARGET_SAMPLE_RATE);
 
         socket.emit("audio_chunk_pcm", buf);
     };
@@ -347,13 +442,19 @@ async function stopRecording() {
     setMicActiveUI(false);
     updateSuggestionText("Processing...");
 
-    mediaRecorder.stop();
-    mediaStream.getTracks().forEach(t => t.stop());
-    processorNode.disconnect();
-    sourceNode.disconnect();
-    audioContext.close();
+    if (processorNode) processorNode.onaudioprocess = null;
 
     const duration = Math.floor((Date.now() - sessionStartTs) / 1000);
+    const recorderStopped = stopMediaRecorder();
+
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+    if (processorNode) processorNode.disconnect();
+    if (sourceNode) sourceNode.disconnect();
+    if (audioContext) await audioContext.close();
+
+    const transcriptForSession = await finishRealtimeTranscript();
+
+    await recorderStopped;
     const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
 
     const form = new FormData();
@@ -362,25 +463,32 @@ async function stopRecording() {
 
     let audioUrl = null;
     try {
-        const r = await fetch(UPLOAD_AUDIO_URL, { method: "POST", body: form });
+        const r = await window.authenticatedFetch(UPLOAD_AUDIO_URL, { method: "POST", body: form });
         if (r.ok) audioUrl = (await r.json()).url;
-    } catch {}
+    } catch (err) {
+        console.error("Audio upload failed", err);
+    }
 
-    await fetch(CREATE_SESSION_URL, {
+    const sessionRes = await window.authenticatedFetch(CREATE_SESSION_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             user_id: CURRENT_USER.id,
             audio_url: audioUrl,
-            transcript: lastTranscript,
+            transcript: transcriptForSession,
             duration_seconds: duration,
             avg_wpm: liveWpm,
             filler_word_count: liveFillerCount
         })
     });
 
-    socket.emit("session_end", { user_id: CURRENT_USER.id });
-    socket.disconnect();
+    if (!sessionRes.ok) {
+        const errorText = await sessionRes.text();
+        console.error("Session creation failed", errorText);
+        alert("Session could not be saved. Please try again.");
+    }
+
+    if (socket) socket.disconnect();
 
     recordedChunks = [];
     sessionStartTs = null;
