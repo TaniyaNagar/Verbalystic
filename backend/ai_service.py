@@ -1,20 +1,33 @@
 import os
-import google.generativeai as genai
+from pathlib import Path
+
 from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    from google import genai as google_genai
+except ImportError:
+    google_genai = None
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(env_path)
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
+MIN_TRANSCRIPT_WORDS = 15
 
-def generate_ai_improved_transcript(transcript: str, user_id: str):
+
+def generate_ai_improved_transcript(transcript: str) -> str:
     """
-    Improves grammar, clarity, and fluency of a speech transcript
+    Improve grammar, clarity, and fluency without changing the speaker's meaning.
+    Returns an empty string when Gemini is unavailable or fails.
     """
+    transcript = (transcript or "").strip()
+    if len(transcript.split()) < MIN_TRANSCRIPT_WORDS:
+        return ""
 
-    if not transcript or len(transcript.split()) < 15:
-        return None
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("Gemini AI skipped: GEMINI_API_KEY is not configured")
+        return ""
 
     prompt = f"""
 You are a speech improvement assistant.
@@ -23,41 +36,34 @@ Improve the following spoken transcript by:
 - Fixing grammar mistakes
 - Making sentences clearer and more fluent
 - Keeping the original meaning
-- NOT adding extra information
-- NOT summarizing
+- Not adding extra information
+- Not summarizing
 
 Transcript:
 \"\"\"{transcript}\"\"\"
 
-Return ONLY the improved transcript.
+Return only the improved transcript.
 """
 
     try:
+        if google_genai is not None:
+            client = google_genai.Client(api_key=api_key)
+            interaction = client.interactions.create(
+                model=GEMINI_MODEL,
+                input=prompt,
+            )
+            return (getattr(interaction, "output_text", "") or "").strip()
+
+        try:
+            import google.generativeai as legacy_genai
+        except ImportError:
+            print("Gemini AI skipped: no Gemini SDK is installed")
+            return ""
+
+        legacy_genai.configure(api_key=api_key)
+        model = legacy_genai.GenerativeModel(GEMINI_MODEL)
         response = model.generate_content(prompt)
-
-        if not response or not response.text:
-            return None
-
-        return response.text.strip()
-
-    except Exception as e:
-        print("Gemini AI error:", e)
-        return None
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-model = genai.GenerativeModel("gemini-3-flash")
-
-def generate_ai_improved_transcript(transcript: str) -> str:
-    prompt = f"""
-You are an English speaking coach.
-Improve clarity, fluency, and grammar.
-Keep meaning same.
-
-Transcript:
-{transcript}
-"""
-    response = model.generate_content(prompt)
-    if not response or not response.text:
+        return (getattr(response, "text", "") or "").strip()
+    except Exception as exc:
+        print(f"Gemini AI error: {exc.__class__.__name__}")
         return ""
-    return response.text.strip()
